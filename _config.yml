@@ -1,0 +1,13 @@
+# Theme Configuration
+avatar: /images/avatar-cat.svg
+
+menu:
+  Home: /
+  Archives: /archives/
+
+# Features
+comments: false
+
+# Stylings
+colors:
+  primary: '#4ade80'
