@@ -1,9 +1,64 @@
 # Theme Configuration
-avatar: /images/avatar-cat.svg
+avatar: /images/avatar-my.svg
 
 menu:
-  Home: /
-  Archives: /archives/
+  Home:
+    label: Home
+    url: /
+    icon: fa-solid fa-house
+    active: true
+  Archives:
+    label: Blog
+    url: /archives/
+    icon: fa-solid fa-feather-pointed
+  Projects:
+    label: Projects
+    url: '#'
+    icon: fa-solid fa-box-open
+  Guestbook:
+    label: Guestbook
+    url: '#'
+    icon: fa-solid fa-message
+
+social:
+  GitHub:
+    url: https://github.com/sukiAme7
+    icon: fa-brands fa-github
+  Email:
+    url: mailto:dongshiyan777@outlook.com
+    icon: fa-solid fa-envelope
+  RSS:
+    url: /atom.xml
+    icon: fa-solid fa-rss
+
+github:
+  username: sukiAme7
+  days: 20
+
+activity:
+  title: Recent Contributions
+  icon: fa-brands fa-git-alt
+  cells:
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
 
 # Features
 comments: false
