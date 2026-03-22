@@ -1,5 +1,5 @@
 # Theme Configuration
-avatar: /images/avatar-cat.svg
+avatar: /images/avatar-my.svg
 
 menu:
   Home:
@@ -22,17 +22,17 @@ menu:
 
 social:
   GitHub:
-    url: https://github.com/example
+    url: https://github.com/sukiAme7
     icon: fa-brands fa-github
   Email:
-    url: mailto:hello@example.com
+    url: mailto:dongshiyan777@outlook.com
     icon: fa-solid fa-envelope
   RSS:
     url: /atom.xml
     icon: fa-solid fa-rss
 
 github:
-  username: octocat
+  username: sukiAme7
   days: 20
 
 activity:
@@ -42,21 +42,21 @@ activity:
     - 0
     - 0
     - 0
-    - 1
     - 0
     - 0
-    - 2
     - 0
     - 0
-    - 1
     - 0
     - 0
-    - 3
-    - 0
-    - 1
     - 0
     - 0
-    - 2
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
     - 0
     - 0
 
@@ -65,7 +65,7 @@ visitor_counter:
   provider: busuanzi
   metric: site_uv
   label: TOTAL VISITORS
-  placeholder: --
+  placeholder: 521,314
 
 photo_wall:
   title: Photo Wall
@@ -75,11 +75,8 @@ photo_wall:
   count_label: Frames
   note: Scattered little frames from ordinary days.
   preview_images:
-    first: https://picsum.photos/seed/sukiame-preview-1/640/640
-    second: https://picsum.photos/seed/sukiame-preview-2/640/640
-  preview_labels:
-    first: Snow Trail
-    second: Window Page
+    first: https://bu.dusays.com/2025/09/15/68c7c5b8b3d5f.jpg
+    second: https://bu.dusays.com/2025/09/20/68ce7ec5b9da8.jpg
   items:
     - title: Snow Trail
       image: https://picsum.photos/seed/suki-wall-01/900/620
@@ -137,6 +134,34 @@ photo_wall:
       width: 150
       rotate: 15
       aspect: '1 / 1.08'
+    - title: Umbrella Rain
+      image: https://picsum.photos/seed/suki-wall-09/900/620
+      x: 30
+      y: 67
+      width: 166
+      rotate: 12
+      aspect: '16 / 10'
+    - title: Soft Portrait
+      image: https://picsum.photos/seed/suki-wall-10/900/620
+      x: 53
+      y: 69
+      width: 170
+      rotate: 18
+      aspect: '16 / 10'
+    - title: Paper Note
+      image: https://picsum.photos/seed/suki-wall-11/760/860
+      x: 72
+      y: 69
+      width: 146
+      rotate: -10
+      aspect: '1 / 1.08'
+    - title: Pink Frame
+      image: https://picsum.photos/seed/suki-wall-12/760/860
+      x: 86
+      y: 74
+      width: 150
+      rotate: 9
+      aspect: '1 / 1.08'
 
 guestbook:
   title: Guestbook
@@ -155,10 +180,10 @@ guestbook:
     width: 214
     rotate: -8
   items:
-    - author: Rainy
+    - author: 闆ㄥぉ
       date: 2026.03.22
       tone: yellow
-      message: This homepage feels airy and calm, like opening a window on a light rainy day.
+      message: 棣栭〉鐨勬皼鍥寸湡鐨勫緢鑸掓湇锛屽儚鏄笅闆ㄥぉ鎵撳紑绐楁椂鍚硅繘鏉ョ殑閭ｄ竴闃甸銆?
       x: 8
       y: 16
       width: 214
@@ -166,7 +191,7 @@ guestbook:
     - author: Momo
       date: 2026.03.21
       tone: pink
-      message: The sticky-note layout is lovely. It already feels like a tiny hand-made wall.
+      message: 鐣欒█鏉垮仛鎴愪究鍒╄创杩欎釜鎯虫硶澶彲鐖变簡锛屽凡缁忓紑濮嬫湡寰呭悗闈㈢殑鐪熷疄鐣欒█鐗堟湰銆?
       x: 30
       y: 12
       width: 208
@@ -174,19 +199,67 @@ guestbook:
     - author: Kiko
       date: 2026.03.20
       tone: blue
-      message: Leaving a short hello here. Hope your next page turns out exactly how you imagined.
+      message: 鏉ヨ俯韪╋紝椤轰究鐣欎笅涓€鍙ュ姞娌广€傛効浣犲啓鐨勬瘡涓〉闈㈤兘鏈夎嚜宸辩嫭鐗圭殑灏忔儏缁€?
       x: 54
       y: 18
       width: 218
       rotate: -8
-    - author: Sora
-      date: 2026.03.18
+    - author: 鏄熷睉
+      date: 2026.03.20
       tone: green
-      message: This board would be such a cozy corner once more real notes start to appear.
+      message: 鎴戝緢鍠滄杩欑鍙互闅忔墜鎷栧姩鐨勬劅瑙夛紝濂藉儚鐪熺殑鍦ㄦ闈笂鎽嗕究鍒╄创銆?
       x: 78
       y: 14
       width: 204
       rotate: 11
+    - author: Nagi
+      date: 2026.03.18
+      tone: lavender
+      message: 浣犵殑缃戠珯瓒婃潵瓒婂儚涓€涓湁鏁呬簨鐨勫皬绌洪棿浜嗭紝鏃㈣交鐩堝張鏈夎蹇嗙偣銆?
+      x: 16
+      y: 45
+      width: 216
+      rotate: 12
+    - author: Yuki
+      date: 2026.03.17
+      tone: peach
+      message: 浠婂ぉ涔熻缁х画寮€蹇冨啓浠ｇ爜銆傜瓑鐣欒█鍔熻兘鎺ヤ笂涔嬪悗锛屾垜鎯崇涓€涓鐪熷啓涓€鏉°€?
+      x: 40
+      y: 42
+      width: 212
+      rotate: -5
+    - author: 闃跨
+      date: 2026.03.16
+      tone: yellow
+      message: 濡傛灉鏈潵杩欓噷鑳借创涓婂緢澶氫汉鐨勭煭鍙ワ紝杩欎竴椤典竴瀹氫細鐗瑰埆娓╂殩銆?
+      x: 67
+      y: 43
+      width: 206
+      rotate: 8
+    - author: Sora
+      date: 2026.03.15
+      tone: blue
+      message: 鍏堟斁涓€寮犺櫄鎷熶究绛惧崰浣嶏紝鎻愰啋鑷繁浠ュ悗鍥炴潵鍐欎竴鍙ョ湡姝ｆ兂璇寸殑璇濄€?
+      x: 24
+      y: 72
+      width: 210
+      rotate: -14
+    - author: Haru
+      date: 2026.03.14
+      tone: pink
+      message: 杩欏潡濡傛灉浠ュ悗鑳藉姞涓婁究绛炬姌瑙掋€佽创绾稿拰灏忓浘绔狅紝鑲畾浼氭洿鏈夋墜璐︽劅銆?
+      x: 51
+      y: 70
+      width: 216
+      rotate: 9
+    - author: Lune
+      date: 2026.03.13
+      tone: green
+      message: 璺繃锛岀暀涓嬩竴鍙ユ櫄涓婂ソ銆傚笇鏈涗綘鍠滄鑷繁涓€鐐逛竴鐐规妸绔欑偣鍋氬嚭鏉ョ殑杩囩▼銆?
+      x: 78
+      y: 69
+      width: 206
+      rotate: -7
 
 friends:
   title: Friends
@@ -202,30 +275,22 @@ friends:
     - Original writing or thoughtful curation
     - HTTPS available and no broken layout
   items:
-    - name: Paper Rain
-      url: https://example.com
-      avatar: https://api.dicebear.com/9.x/glass/svg?seed=paper-rain
-      description: Small essays, frontend sketches, and soft web experiments.
+    - name: SukiAme
+      url: https://github.com/sukiAme7
+      avatar: /images/avatar-my.svg
+      description: Rainy mood, code notes, and small web experiments.
       tags:
         - Blog
         - Coding
       accent: blue
-    - name: Mint Lab
-      url: https://example.com
-      avatar: https://api.dicebear.com/9.x/glass/svg?seed=mint-lab
-      description: A calm lab for frontend tinkering, tiny widgets, and UI drafts.
-      tags:
-        - Frontend
-        - UI
-      accent: green
-    - name: Night Shelf
-      url: https://example.com
-      avatar: https://api.dicebear.com/9.x/glass/svg?seed=night-shelf
-      description: Reading logs, favorite quotes, and a shelf of long-form notes.
-      tags:
-        - Reading
-        - Notes
-      accent: peach
+    - name: Nankai
+      url: https://webvpn.nankai.edu.cn/https/77726476706e69737468656265737421f9f64cd22931665b7f01c7a99c406d36af/login?next=%2Fapi%2Fcas%2Flogin%3Fservice%3Dhttps%253A%252F%252Fwebvpn.nankai.edu.cn%252Flogin%253Fcas_login%253Dtrue
+      avatar: https://bu.dusays.com/2025/09/16/68c90196b6246.jpg
+      description: Web VPN
+    - name: NK-GeniOS
+      url: https://coze.nankai.edu.cn/
+      avatar: https://bu.dusays.com/2026/01/15/69685fcd87310.png
+      description: 鍗楀紑coze骞冲彴
 
 # Features
 comments: false
