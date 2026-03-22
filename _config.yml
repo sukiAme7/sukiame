@@ -1,5 +1,6 @@
 # Theme Configuration
 avatar: /images/avatar-my.svg
+favicon: /images/favicon.ico
 
 menu:
   Home:
