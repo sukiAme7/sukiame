@@ -1,0 +1,17 @@
+{
+  "name": "hexo-theme-sukiame",
+  "version": "0.1.0",
+  "description": "A soft glassmorphism Hexo theme with bento layouts, archive views, a friends page, a guestbook, and animated page transitions.",
+  "license": "MIT",
+  "keywords": [
+    "hexo",
+    "hexo-theme",
+    "theme",
+    "blog",
+    "glassmorphism",
+    "bento"
+  ],
+  "engines": {
+    "hexo": "^8.0.0"
+  }
+}
