@@ -11,13 +11,9 @@ menu:
     label: Blog
     url: /archives/
     icon: fa-solid fa-feather-pointed
-  Projects:
-    label: Projects
-    url: '#'
-    icon: fa-solid fa-box-open
   Guestbook:
     label: Guestbook
-    url: '#'
+    url: /guestbook/
     icon: fa-solid fa-message
 
 social:
@@ -63,8 +59,193 @@ activity:
 photo_wall:
   title: Photo Wall
   subtitle: Life Moments
-  url: '#'
+  url: /photo-wall/
   icon: fa-solid fa-image
+  count_label: Frames
+  note: Scattered little frames from ordinary days.
+  items:
+    - title: Snow Trail
+      image: https://picsum.photos/seed/suki-wall-01/900/620
+      x: 8
+      y: 15
+      width: 188
+      rotate: -13
+      aspect: '16 / 10'
+    - title: Blue Notes
+      image: https://picsum.photos/seed/suki-wall-02/760/820
+      x: 31
+      y: 17
+      width: 150
+      rotate: -2
+      aspect: '1 / 1.08'
+    - title: Forest Story
+      image: https://picsum.photos/seed/suki-wall-03/900/580
+      x: 53
+      y: 12
+      width: 188
+      rotate: -17
+      aspect: '16 / 10'
+    - title: Sky Spark
+      image: https://picsum.photos/seed/suki-wall-04/900/580
+      x: 74
+      y: 16
+      width: 176
+      rotate: 11
+      aspect: '16 / 10'
+    - title: Quiet Snow
+      image: https://picsum.photos/seed/suki-wall-05/780/780
+      x: 16
+      y: 43
+      width: 162
+      rotate: 14
+      aspect: '1 / 1'
+    - title: Green Light
+      image: https://picsum.photos/seed/suki-wall-06/900/560
+      x: 38
+      y: 40
+      width: 164
+      rotate: -1
+      aspect: '16 / 10'
+    - title: Crystal Blue
+      image: https://picsum.photos/seed/suki-wall-07/900/620
+      x: 55
+      y: 38
+      width: 164
+      rotate: -18
+      aspect: '16 / 10'
+    - title: Window Page
+      image: https://picsum.photos/seed/suki-wall-08/760/860
+      x: 80
+      y: 36
+      width: 150
+      rotate: 15
+      aspect: '1 / 1.08'
+    - title: Umbrella Rain
+      image: https://picsum.photos/seed/suki-wall-09/900/620
+      x: 30
+      y: 67
+      width: 166
+      rotate: 12
+      aspect: '16 / 10'
+    - title: Soft Portrait
+      image: https://picsum.photos/seed/suki-wall-10/900/620
+      x: 53
+      y: 69
+      width: 170
+      rotate: 18
+      aspect: '16 / 10'
+    - title: Paper Note
+      image: https://picsum.photos/seed/suki-wall-11/760/860
+      x: 72
+      y: 69
+      width: 146
+      rotate: -10
+      aspect: '1 / 1.08'
+    - title: Pink Frame
+      image: https://picsum.photos/seed/suki-wall-12/760/860
+      x: 86
+      y: 74
+      width: 150
+      rotate: 9
+      aspect: '1 / 1.08'
+
+guestbook:
+  title: Guestbook
+  subtitle: Little Notes
+  url: /guestbook/
+  icon: fa-solid fa-message
+  count_label: Notes
+  note: A sky of sticky notes, each one carrying a little warmth.
+  composer:
+    title: Write a Note
+    subtitle: Leave a little hello for the next visitor.
+    button: Start Writing
+    tone: peach
+    x: 82
+    y: 42
+    width: 214
+    rotate: -8
+  items:
+    - author: 雨天
+      date: 2026.03.22
+      tone: yellow
+      message: 首页的氛围真的很舒服，像是下雨天打开窗时吹进来的那一阵风。
+      x: 8
+      y: 16
+      width: 214
+      rotate: -10
+    - author: Momo
+      date: 2026.03.21
+      tone: pink
+      message: 留言板做成便利贴这个想法太可爱了，已经开始期待后面的真实留言版本。
+      x: 30
+      y: 12
+      width: 208
+      rotate: 6
+    - author: Kiko
+      date: 2026.03.20
+      tone: blue
+      message: 来踩踩，顺便留下一句加油。愿你写的每个页面都有自己独特的小情绪。
+      x: 54
+      y: 18
+      width: 218
+      rotate: -8
+    - author: 星屑
+      date: 2026.03.20
+      tone: green
+      message: 我很喜欢这种可以随手拖动的感觉，好像真的在桌面上摆便利贴。
+      x: 78
+      y: 14
+      width: 204
+      rotate: 11
+    - author: Nagi
+      date: 2026.03.18
+      tone: lavender
+      message: 你的网站越来越像一个有故事的小空间了，既轻盈又有记忆点。
+      x: 16
+      y: 45
+      width: 216
+      rotate: 12
+    - author: Yuki
+      date: 2026.03.17
+      tone: peach
+      message: 今天也要继续开心写代码。等留言功能接上之后，我想第一个认真写一条。
+      x: 40
+      y: 42
+      width: 212
+      rotate: -5
+    - author: 阿秋
+      date: 2026.03.16
+      tone: yellow
+      message: 如果未来这里能贴上很多人的短句，这一页一定会特别温暖。
+      x: 67
+      y: 43
+      width: 206
+      rotate: 8
+    - author: Sora
+      date: 2026.03.15
+      tone: blue
+      message: 先放一张虚拟便签占位，提醒自己以后回来写一句真正想说的话。
+      x: 24
+      y: 72
+      width: 210
+      rotate: -14
+    - author: Haru
+      date: 2026.03.14
+      tone: pink
+      message: 这块如果以后能加上便签折角、贴纸和小图章，肯定会更有手账感。
+      x: 51
+      y: 70
+      width: 216
+      rotate: 9
+    - author: Lune
+      date: 2026.03.13
+      tone: green
+      message: 路过，留下一句晚上好。希望你喜欢自己一点一点把站点做出来的过程。
+      x: 78
+      y: 69
+      width: 206
+      rotate: -7
 
 # Features
 comments: false
