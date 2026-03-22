@@ -60,6 +60,12 @@ activity:
     - 0
     - 0
 
+photo_wall:
+  title: Photo Wall
+  subtitle: Life Moments
+  url: '#'
+  icon: fa-solid fa-image
+
 # Features
 comments: false
 
