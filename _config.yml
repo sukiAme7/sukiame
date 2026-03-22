@@ -65,7 +65,7 @@ visitor_counter:
   provider: busuanzi
   metric: site_uv
   label: TOTAL VISITORS
-  placeholder: 521,314
+  placeholder: '521,314'
 
 photo_wall:
   title: Photo Wall
@@ -180,10 +180,10 @@ guestbook:
     width: 214
     rotate: -8
   items:
-    - author: 闆ㄥぉ
+    - author: Rainy
       date: 2026.03.22
       tone: yellow
-      message: 棣栭〉鐨勬皼鍥寸湡鐨勫緢鑸掓湇锛屽儚鏄笅闆ㄥぉ鎵撳紑绐楁椂鍚硅繘鏉ョ殑閭ｄ竴闃甸銆?
+      message: This homepage feels airy and calm, like opening a window on a light rainy day.
       x: 8
       y: 16
       width: 214
@@ -191,7 +191,7 @@ guestbook:
     - author: Momo
       date: 2026.03.21
       tone: pink
-      message: 鐣欒█鏉垮仛鎴愪究鍒╄创杩欎釜鎯虫硶澶彲鐖变簡锛屽凡缁忓紑濮嬫湡寰呭悗闈㈢殑鐪熷疄鐣欒█鐗堟湰銆?
+      message: The sticky-note layout is lovely. It already feels like a tiny hand-made wall.
       x: 30
       y: 12
       width: 208
@@ -199,15 +199,15 @@ guestbook:
     - author: Kiko
       date: 2026.03.20
       tone: blue
-      message: 鏉ヨ俯韪╋紝椤轰究鐣欎笅涓€鍙ュ姞娌广€傛効浣犲啓鐨勬瘡涓〉闈㈤兘鏈夎嚜宸辩嫭鐗圭殑灏忔儏缁€?
+      message: Leaving a short hello here. Hope your next page turns out exactly how you imagined.
       x: 54
       y: 18
       width: 218
       rotate: -8
-    - author: 鏄熷睉
+    - author: Sora
       date: 2026.03.20
       tone: green
-      message: 鎴戝緢鍠滄杩欑鍙互闅忔墜鎷栧姩鐨勬劅瑙夛紝濂藉儚鐪熺殑鍦ㄦ闈笂鎽嗕究鍒╄创銆?
+      message: This board would be such a cozy corner once more real notes start to appear.
       x: 78
       y: 14
       width: 204
@@ -215,7 +215,7 @@ guestbook:
     - author: Nagi
       date: 2026.03.18
       tone: lavender
-      message: 浣犵殑缃戠珯瓒婃潵瓒婂儚涓€涓湁鏁呬簨鐨勫皬绌洪棿浜嗭紝鏃㈣交鐩堝張鏈夎蹇嗙偣銆?
+      message: Your site is slowly turning into a warm little place with its own mood and memory.
       x: 16
       y: 45
       width: 216
@@ -223,39 +223,23 @@ guestbook:
     - author: Yuki
       date: 2026.03.17
       tone: peach
-      message: 浠婂ぉ涔熻缁х画寮€蹇冨啓浠ｇ爜銆傜瓑鐣欒█鍔熻兘鎺ヤ笂涔嬪悗锛屾垜鎯崇涓€涓鐪熷啓涓€鏉°€?
+      message: Keep writing with joy. I want to come back later and leave a real note here too.
       x: 40
       y: 42
       width: 212
       rotate: -5
-    - author: 闃跨
+    - author: Aki
       date: 2026.03.16
       tone: yellow
-      message: 濡傛灉鏈潵杩欓噷鑳借创涓婂緢澶氫汉鐨勭煭鍙ワ紝杩欎竴椤典竴瀹氫細鐗瑰埆娓╂殩銆?
+      message: Once this board fills with more messages, this page is going to feel especially warm.
       x: 67
       y: 43
       width: 206
       rotate: 8
-    - author: Sora
-      date: 2026.03.15
-      tone: blue
-      message: 鍏堟斁涓€寮犺櫄鎷熶究绛惧崰浣嶏紝鎻愰啋鑷繁浠ュ悗鍥炴潵鍐欎竴鍙ョ湡姝ｆ兂璇寸殑璇濄€?
-      x: 24
-      y: 72
-      width: 210
-      rotate: -14
-    - author: Haru
-      date: 2026.03.14
-      tone: pink
-      message: 杩欏潡濡傛灉浠ュ悗鑳藉姞涓婁究绛炬姌瑙掋€佽创绾稿拰灏忓浘绔狅紝鑲畾浼氭洿鏈夋墜璐︽劅銆?
-      x: 51
-      y: 70
-      width: 216
-      rotate: 9
     - author: Lune
       date: 2026.03.13
       tone: green
-      message: 璺繃锛岀暀涓嬩竴鍙ユ櫄涓婂ソ銆傚笇鏈涗綘鍠滄鑷繁涓€鐐逛竴鐐规妸绔欑偣鍋氬嚭鏉ョ殑杩囩▼銆?
+      message: Passing by to say good evening. Hope you enjoy the process of slowly shaping this site into your own.
       x: 78
       y: 69
       width: 206
@@ -290,7 +274,7 @@ friends:
     - name: NK-GeniOS
       url: https://coze.nankai.edu.cn/
       avatar: https://bu.dusays.com/2026/01/15/69685fcd87310.png
-      description: 鍗楀紑coze骞冲彴
+      description: Nankai Coze Platform
 
 # Features
 comments: false
