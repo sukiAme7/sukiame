@@ -2,8 +2,9 @@
   || 'sukiame' ; const heroLine=config.description || 'The only way to do great is to love what you do.' ; const
   heroSource=config.description_source || '' ; const menuEntries=[ { key: 'Home' , fallbackLabel: 'Home' ,
   fallbackUrl: '/' , fallbackIcon: 'fa-solid fa-house' , active: true }, { key: 'Archives' , fallbackLabel: 'Blog' ,
-  fallbackUrl: '/archives/' , fallbackIcon: 'fa-solid fa-feather-pointed' }, { key: 'Guestbook' ,
-  fallbackLabel: 'Guestbook' , fallbackUrl: '#' , fallbackIcon: 'fa-solid fa-message' } ].map((item)=> {
+  fallbackUrl: '/archives/' , fallbackIcon: 'fa-solid fa-feather-pointed' }, { key: 'Friends' , fallbackLabel: 'Friends'
+  , fallbackUrl: '#' , fallbackIcon: 'fa-solid fa-link' }, { key: 'Guestbook' , fallbackLabel: 'Guestbook' ,
+  fallbackUrl: '#' , fallbackIcon: 'fa-solid fa-message' } ].map((item)=> {
   const menuItem = theme.menu && theme.menu[item.key] ? theme.menu[item.key] : {};
   const normalized = typeof menuItem === 'string' ? { url: menuItem } : menuItem;
   return {
@@ -23,6 +24,22 @@
   };
   });
 
+  const resolveAsset = (value) => {
+  const link = value || '';
+  if (!link) return '';
+  return /^(?:[a-z][a-z0-9+.-]*:)?\/\//i.test(link) || /^(#|mailto:|tel:)/i.test(link)
+  ? link
+  : url_for(link);
+  };
+
+  const getCover = (post) => {
+  const photo = Array.isArray(post.photos) && post.photos.length ? post.photos[0] : '';
+  const raw = post.cover || post.thumbnail || post.banner || post.top_img || photo || '';
+  if (!raw) return '';
+  const value = typeof raw === 'string' ? raw : (raw.path || raw.url || '');
+  return value ? resolveAsset(value) : '';
+  };
+
   const activityConfig = theme.activity || {};
   const activityTitle = activityConfig.title || '代码活跃度';
   const activitySubtitle = activityConfig.subtitle || 'Recent Contributions';
@@ -35,6 +52,13 @@
   const activityDays = activityCells.length;
   const activityRows = activityDays > 10 ? 2 : 1;
   const activityColumns = Math.ceil(activityDays / activityRows);
+  const visitorCounterConfig = theme.visitor_counter || {};
+  const visitorCounterEnabled = !!visitorCounterConfig.enable && (visitorCounterConfig.provider || 'busuanzi') === 'busuanzi';
+  const visitorCounterMetric = visitorCounterConfig.metric === 'site_pv' ? 'site_pv' : 'site_uv';
+  const visitorCounterPlaceholder = visitorCounterConfig.placeholder || '--';
+  const visitorCounterLabel = visitorCounterConfig.label || 'TOTAL VISITORS';
+  const visitorCounterContainerId = `busuanzi_container_${visitorCounterMetric}`;
+  const visitorCounterValueId = `busuanzi_value_${visitorCounterMetric}`;
 
   const photoWallConfig = theme.photo_wall || {};
   const photoWallTitle = photoWallConfig.title || '照片墙';
@@ -44,6 +68,12 @@
   const photoWallHref = /^(?:[a-z][a-z0-9+.-]*:)?\/\//i.test(photoWallUrl) || /^(#|mailto:|tel:)/i.test(photoWallUrl)
   ? photoWallUrl
   : url_for(photoWallUrl);
+  const photoWallPreviewImages = photoWallConfig.preview_images || {};
+  const photoWallPreviewFirst = resolveAsset(photoWallPreviewImages.first || '');
+  const photoWallPreviewSecond = resolveAsset(photoWallPreviewImages.second || '');
+  const photoWallPreviewLabels = photoWallConfig.preview_labels || {};
+  const photoWallPreviewFirstLabel = photoWallPreviewLabels.first || '';
+  const photoWallPreviewSecondLabel = photoWallPreviewLabels.second || '';
 
   const fallbackPosts = [
   {
@@ -84,6 +114,7 @@
       : fallbackPosts[index].excerpt,
       date: post.date || new Date(),
       path: post.path || '#',
+      cover: getCover(post),
       icon: post.icon || icons[index],
       color: post.color || colors[index]
       };
@@ -100,7 +131,7 @@
               </div>
               <h1 class="profile-title font-cute"><%- authorName %></h1>
               <p class="profile-subtitle">
-                人要学会喜欢自己
+                人要先学会喜欢自己
               </p>
 
               <div class="profile-actions">
@@ -162,14 +193,20 @@
                 <div class="post-list">
                   <% displayPosts.forEach((post)=> { %>
                     <a href="<%- post.path === '#' ? '#' : url_for(post.path) %>" class="post-row">
-                      <div class="post-icon post-icon-<%- post.color %>">
-                        <i class="<%- post.icon %>"></i>
-                      </div>
-                      <div class="post-text">
-                        <h3 class="post-title"><%- post.title %></h3>
-                        <p class="post-excerpt"><%- post.excerpt %></p>
-                      </div>
-                      <div class="post-date"><%- date(post.date, 'MM-DD' ) %></div>
+                      <% if (post.cover) { %>
+                        <div class="post-cover-thumb">
+                          <img src="<%- post.cover %>" alt="<%- post.title %>" loading="lazy">
+                        </div>
+                        <% } else { %>
+                          <div class="post-icon post-icon-<%- post.color %>">
+                            <i class="<%- post.icon %>"></i>
+                          </div>
+                          <% } %>
+                            <div class="post-text">
+                              <h3 class="post-title"><%- post.title %></h3>
+                              <p class="post-excerpt"><%- post.excerpt %></p>
+                            </div>
+                            <div class="post-date"><%- date(post.date, 'MM-DD' ) %></div>
                     </a>
                     <% }) %>
                 </div>
@@ -180,14 +217,25 @@
                   <div class="photo-glow"></div>
                   <div class="photo-copy">
                     <h3><%- photoWallTitle %></h3>
-                    <p><%- photoWallSubtitle %></p>
                   </div>
                   <div class="photo-badge">
                     <i class="<%- photoWallIcon %>"></i>
                   </div>
                   <div class="photo-stack" aria-hidden="true">
-                    <div class="photo-shot photo-shot-one"></div>
-                    <div class="photo-shot photo-shot-two"></div>
+                    <div class="photo-shot photo-shot-one <%= photoWallPreviewFirst ? 'has-image' : '' %>">
+                      <% if (photoWallPreviewFirst) { %><img src="<%- photoWallPreviewFirst %>" alt="" loading="lazy">
+                        <% } %>
+                          <% if (photoWallPreviewFirstLabel) { %><span class="photo-shot-label"><%-
+                                photoWallPreviewFirstLabel %></span>
+                            <% } %>
+                    </div>
+                    <div class="photo-shot photo-shot-two <%= photoWallPreviewSecond ? 'has-image' : '' %>">
+                      <% if (photoWallPreviewSecond) { %><img src="<%- photoWallPreviewSecond %>" alt="" loading="lazy">
+                        <% } %>
+                          <% if (photoWallPreviewSecondLabel) { %><span class="photo-shot-label"><%-
+                                photoWallPreviewSecondLabel %></span>
+                            <% } %>
+                    </div>
                   </div>
                 </a>
 
@@ -242,10 +290,14 @@
                 <div class="visitors-badge">
                   <i class="fa-solid fa-user-group"></i>
                 </div>
-                <div class="visitors-metric">
-                  <strong>521, 314</strong>
-                  <span>TOTAL VISITORS</span>
-                </div>
+                <% if (visitorCounterEnabled) { %>
+                  <strong class="visitors-value" id="<%- visitorCounterContainerId %>" aria-live="polite">
+                    <span id="<%- visitorCounterValueId %>"><%- visitorCounterPlaceholder %></span>
+                  </strong>
+                <% } else { %>
+                  <strong class="visitors-value" aria-live="polite"><%- visitorCounterPlaceholder %></strong>
+                <% } %>
+                <span class="visitors-label"><%- visitorCounterLabel.replace(/\s+/g, '<br>') %></span>
               </div>
             </section>
           </aside>

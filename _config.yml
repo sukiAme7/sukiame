@@ -1,5 +1,5 @@
 # Theme Configuration
-avatar: /images/avatar-my.svg
+avatar: /images/avatar-cat.svg
 
 menu:
   Home:
@@ -11,6 +11,10 @@ menu:
     label: Blog
     url: /archives/
     icon: fa-solid fa-feather-pointed
+  Friends:
+    label: Friends
+    url: /friends/
+    icon: fa-solid fa-link
   Guestbook:
     label: Guestbook
     url: /guestbook/
@@ -18,17 +22,17 @@ menu:
 
 social:
   GitHub:
-    url: https://github.com/sukiAme7
+    url: https://github.com/example
     icon: fa-brands fa-github
   Email:
-    url: mailto:dongshiyan777@outlook.com
+    url: mailto:hello@example.com
     icon: fa-solid fa-envelope
   RSS:
     url: /atom.xml
     icon: fa-solid fa-rss
 
 github:
-  username: sukiAme7
+  username: octocat
   days: 20
 
 activity:
@@ -38,23 +42,30 @@ activity:
     - 0
     - 0
     - 0
+    - 1
     - 0
     - 0
+    - 2
     - 0
     - 0
+    - 1
     - 0
     - 0
+    - 3
+    - 0
+    - 1
     - 0
     - 0
+    - 2
     - 0
     - 0
-    - 0
-    - 0
-    - 0
-    - 0
-    - 0
-    - 0
-    - 0
+
+visitor_counter:
+  enable: false
+  provider: busuanzi
+  metric: site_uv
+  label: TOTAL VISITORS
+  placeholder: --
 
 photo_wall:
   title: Photo Wall
@@ -63,6 +74,12 @@ photo_wall:
   icon: fa-solid fa-image
   count_label: Frames
   note: Scattered little frames from ordinary days.
+  preview_images:
+    first: https://picsum.photos/seed/sukiame-preview-1/640/640
+    second: https://picsum.photos/seed/sukiame-preview-2/640/640
+  preview_labels:
+    first: Snow Trail
+    second: Window Page
   items:
     - title: Snow Trail
       image: https://picsum.photos/seed/suki-wall-01/900/620
@@ -120,34 +137,6 @@ photo_wall:
       width: 150
       rotate: 15
       aspect: '1 / 1.08'
-    - title: Umbrella Rain
-      image: https://picsum.photos/seed/suki-wall-09/900/620
-      x: 30
-      y: 67
-      width: 166
-      rotate: 12
-      aspect: '16 / 10'
-    - title: Soft Portrait
-      image: https://picsum.photos/seed/suki-wall-10/900/620
-      x: 53
-      y: 69
-      width: 170
-      rotate: 18
-      aspect: '16 / 10'
-    - title: Paper Note
-      image: https://picsum.photos/seed/suki-wall-11/760/860
-      x: 72
-      y: 69
-      width: 146
-      rotate: -10
-      aspect: '1 / 1.08'
-    - title: Pink Frame
-      image: https://picsum.photos/seed/suki-wall-12/760/860
-      x: 86
-      y: 74
-      width: 150
-      rotate: 9
-      aspect: '1 / 1.08'
 
 guestbook:
   title: Guestbook
@@ -166,10 +155,10 @@ guestbook:
     width: 214
     rotate: -8
   items:
-    - author: 雨天
+    - author: Rainy
       date: 2026.03.22
       tone: yellow
-      message: 首页的氛围真的很舒服，像是下雨天打开窗时吹进来的那一阵风。
+      message: This homepage feels airy and calm, like opening a window on a light rainy day.
       x: 8
       y: 16
       width: 214
@@ -177,7 +166,7 @@ guestbook:
     - author: Momo
       date: 2026.03.21
       tone: pink
-      message: 留言板做成便利贴这个想法太可爱了，已经开始期待后面的真实留言版本。
+      message: The sticky-note layout is lovely. It already feels like a tiny hand-made wall.
       x: 30
       y: 12
       width: 208
@@ -185,67 +174,58 @@ guestbook:
     - author: Kiko
       date: 2026.03.20
       tone: blue
-      message: 来踩踩，顺便留下一句加油。愿你写的每个页面都有自己独特的小情绪。
+      message: Leaving a short hello here. Hope your next page turns out exactly how you imagined.
       x: 54
       y: 18
       width: 218
       rotate: -8
-    - author: 星屑
-      date: 2026.03.20
+    - author: Sora
+      date: 2026.03.18
       tone: green
-      message: 我很喜欢这种可以随手拖动的感觉，好像真的在桌面上摆便利贴。
+      message: This board would be such a cozy corner once more real notes start to appear.
       x: 78
       y: 14
       width: 204
       rotate: 11
-    - author: Nagi
-      date: 2026.03.18
-      tone: lavender
-      message: 你的网站越来越像一个有故事的小空间了，既轻盈又有记忆点。
-      x: 16
-      y: 45
-      width: 216
-      rotate: 12
-    - author: Yuki
-      date: 2026.03.17
-      tone: peach
-      message: 今天也要继续开心写代码。等留言功能接上之后，我想第一个认真写一条。
-      x: 40
-      y: 42
-      width: 212
-      rotate: -5
-    - author: 阿秋
-      date: 2026.03.16
-      tone: yellow
-      message: 如果未来这里能贴上很多人的短句，这一页一定会特别温暖。
-      x: 67
-      y: 43
-      width: 206
-      rotate: 8
-    - author: Sora
-      date: 2026.03.15
-      tone: blue
-      message: 先放一张虚拟便签占位，提醒自己以后回来写一句真正想说的话。
-      x: 24
-      y: 72
-      width: 210
-      rotate: -14
-    - author: Haru
-      date: 2026.03.14
-      tone: pink
-      message: 这块如果以后能加上便签折角、贴纸和小图章，肯定会更有手账感。
-      x: 51
-      y: 70
-      width: 216
-      rotate: 9
-    - author: Lune
-      date: 2026.03.13
-      tone: green
-      message: 路过，留下一句晚上好。希望你喜欢自己一点一点把站点做出来的过程。
-      x: 78
-      y: 69
-      width: 206
-      rotate: -7
+
+friends:
+  title: Friends
+  subtitle: Gentle Corners Of The Web
+  url: /friends/
+  icon: fa-solid fa-link
+  count_label: Sites
+  note: A few lovely places worth keeping close.
+  exchange_title: Link Exchange
+  exchange_copy: If your site has its own style and a little warmth, I would love to exchange links.
+  exchange_rules:
+    - Stable personal or indie site
+    - Original writing or thoughtful curation
+    - HTTPS available and no broken layout
+  items:
+    - name: Paper Rain
+      url: https://example.com
+      avatar: https://api.dicebear.com/9.x/glass/svg?seed=paper-rain
+      description: Small essays, frontend sketches, and soft web experiments.
+      tags:
+        - Blog
+        - Coding
+      accent: blue
+    - name: Mint Lab
+      url: https://example.com
+      avatar: https://api.dicebear.com/9.x/glass/svg?seed=mint-lab
+      description: A calm lab for frontend tinkering, tiny widgets, and UI drafts.
+      tags:
+        - Frontend
+        - UI
+      accent: green
+    - name: Night Shelf
+      url: https://example.com
+      avatar: https://api.dicebear.com/9.x/glass/svg?seed=night-shelf
+      description: Reading logs, favorite quotes, and a shelf of long-form notes.
+      tags:
+        - Reading
+        - Notes
+      accent: peach
 
 # Features
 comments: false

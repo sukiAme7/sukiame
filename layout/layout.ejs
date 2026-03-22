@@ -4,9 +4,27 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><%- page.title || config.title %></title>
+    <link rel="alternate" type="application/atom+xml" title="<%- config.title || 'RSS Feed' %>" href="<%- url_for('/atom.xml') %>">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=ZCOOL+KuaiLe&display=swap" rel="stylesheet">
+    <script>
+        (() => {
+            try {
+                const raw = window.sessionStorage.getItem('sukiame-page-transition');
+                if (!raw) return;
+
+                const snapshot = JSON.parse(raw);
+                if (
+                    snapshot &&
+                    snapshot.href === window.location.href &&
+                    Date.now() - snapshot.at < 4000
+                ) {
+                    document.documentElement.classList.add('is-page-enter-prep');
+                }
+            } catch (error) {}
+        })();
+    </script>
     <script>
         tailwind.config = {
             theme: {
@@ -50,10 +68,132 @@
             font-family: 'Nunito', sans-serif;
         }
 
+        body::after {
+            content: "";
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(circle at 18% 22%, rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0) 28%),
+                radial-gradient(circle at 82% 18%, rgba(186, 230, 253, 0.24), rgba(186, 230, 253, 0) 26%),
+                linear-gradient(135deg, rgba(224, 242, 254, 0.2), rgba(243, 232, 255, 0.18));
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.64s cubic-bezier(0.2, 0.76, 0.2, 1);
+            z-index: 999;
+        }
+
+        body.is-page-leaving::after {
+            opacity: 1;
+        }
+
+        body.is-page-leaving {
+            pointer-events: none;
+        }
+
+        .page-transition-target {
+            will-change: transform, opacity;
+            transform-origin: center center;
+            backface-visibility: hidden;
+            transform-style: preserve-3d;
+            contain: paint;
+            isolation: isolate;
+            --page-exit-duration: 1060ms;
+            --page-enter-duration: 620ms;
+            --page-transition-delay: 0ms;
+            --page-exit-scale: 0.88;
+        }
+
+        body.is-page-leaving .page-transition-target {
+            animation: pageTransitionOut var(--page-exit-duration) cubic-bezier(0.2, 0.74, 0.18, 1) both;
+            animation-delay: var(--page-transition-delay);
+            pointer-events: none;
+        }
+
+        html.is-page-entering .page-transition-target {
+            animation: pageTransitionIn var(--page-enter-duration) cubic-bezier(0.14, 0.82, 0.2, 1) both;
+            animation-delay: var(--page-transition-delay);
+            pointer-events: none;
+        }
+
+        html.is-page-enter-prep .page-transition-target {
+            opacity: 0;
+            transform: translate3d(var(--page-enter-x, 0px), var(--page-enter-y, 0px), 0) scale(0.972) rotate(var(--page-enter-rotate, 0deg));
+            pointer-events: none;
+        }
+
+        html.is-page-enter-prep .profile-panel,
+        html.is-page-enter-prep .nav-panel,
+        html.is-page-enter-prep .hero-panel,
+        html.is-page-enter-prep .latest-panel,
+        html.is-page-enter-prep .photo-panel,
+        html.is-page-enter-prep .activity-panel,
+        html.is-page-enter-prep .clock-panel,
+        html.is-page-enter-prep .calendar-panel,
+        html.is-page-enter-prep .visitors-panel,
+        html.is-page-enter-prep .blog-dock,
+        html.is-page-enter-prep .blog-status,
+        html.is-page-enter-prep .blog-hero,
+        html.is-page-enter-prep .blog-panel,
+        html.is-page-enter-prep .post-dock,
+        html.is-page-enter-prep .post-status,
+        html.is-page-enter-prep .post-hero,
+        html.is-page-enter-prep .post-panel,
+        html.is-page-enter-prep .friends-dock,
+        html.is-page-enter-prep .friends-status,
+        html.is-page-enter-prep .friends-hero,
+        html.is-page-enter-prep .friends-panel,
+        html.is-page-enter-prep .photo-wall-dock,
+        html.is-page-enter-prep .photo-wall-status,
+        html.is-page-enter-prep .photo-wall-board,
+        html.is-page-enter-prep .guestbook-dock,
+        html.is-page-enter-prep .guestbook-status,
+        html.is-page-enter-prep .guestbook-board {
+            opacity: 0;
+        }
+
         @keyframes gradientBG {
             0% { background-position: 0% 50%; }
             50% { background-position: 100% 50%; }
             100% { background-position: 0% 50%; }
+        }
+
+        @keyframes pageTransitionOut {
+            0% {
+                opacity: 1;
+                transform: translate3d(0, 0, 0) scale(1) rotate(0deg);
+            }
+
+            32% {
+                opacity: 0.997;
+                transform: translate3d(calc(var(--page-exit-mid-x, 0px) * 0.4), calc(var(--page-exit-mid-y, 0px) * 0.4), 0) scale(0.995) rotate(calc(var(--page-exit-mid-rotate, 0deg) * 0.48));
+            }
+
+            70% {
+                opacity: 0.952;
+                transform: translate3d(var(--page-exit-mid-x, 0px), var(--page-exit-mid-y, 0px), 0) scale(0.986) rotate(var(--page-exit-mid-rotate, 0deg));
+            }
+
+            100% {
+                opacity: 0;
+                transform: translate3d(var(--page-exit-x, 0px), var(--page-exit-y, 0px), 0) scale(var(--page-exit-scale, 0.88)) rotate(var(--page-exit-rotate, 0deg));
+            }
+        }
+
+        @keyframes pageTransitionIn {
+            0% {
+                opacity: 0;
+                transform: translate3d(var(--page-enter-x, 0px), var(--page-enter-y, 0px), 0) scale(0.972) rotate(var(--page-enter-rotate, 0deg));
+            }
+
+            68% {
+                opacity: 0.99;
+                transform: translate3d(calc(var(--page-enter-x, 0px) * 0.14), calc(var(--page-enter-y, 0px) * 0.14), 0) scale(0.997) rotate(calc(var(--page-enter-rotate, 0deg) * 0.14));
+            }
+
+            100% {
+                opacity: 1;
+                transform: translate3d(0, 0, 0) scale(1) rotate(0deg);
+            }
         }
 
         a {
@@ -456,6 +596,28 @@
             transition: all 0.3s ease;
         }
 
+        .post-cover-thumb {
+            width: 3rem;
+            height: 3rem;
+            border-radius: 0.75rem;
+            overflow: hidden;
+            flex-shrink: 0;
+            box-shadow: 0 8px 20px rgba(148, 163, 184, 0.16);
+            background: linear-gradient(135deg, #bae6fd, #d9f99d);
+        }
+
+        .post-cover-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            transition: transform 0.28s ease;
+        }
+
+        .post-row:hover .post-cover-thumb img {
+            transform: scale(1.06);
+        }
+
         .post-row:hover .post-icon {
             color: #fff;
         }
@@ -625,38 +787,68 @@
 
         .photo-stack {
             position: absolute;
-            left: 1rem;
-            bottom: 0.3rem;
-            width: 6.3rem;
-            height: 4.35rem;
+            left: 1.15rem;
+            bottom: 0.6rem;
+            width: 8.9rem;
+            height: 5.95rem;
             z-index: 1;
             pointer-events: none;
-            transform: scale(0.92);
+            transform: none;
             transform-origin: bottom left;
         }
 
         .photo-shot {
             position: absolute;
             background: #fff;
-            padding: 0.18rem;
-            border-radius: 0.65rem;
+            padding: 0.18rem 0.18rem 0.46rem;
+            border-radius: 0.8rem;
             overflow: hidden;
             border: 1px solid rgba(255, 255, 255, 0.75);
-            box-shadow: 0 10px 22px rgba(79, 98, 140, 0.22);
+            box-shadow: 0 12px 24px rgba(79, 98, 140, 0.22);
             z-index: 0;
             transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.3s ease;
+        }
+
+        .photo-shot img {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            height: calc(100% - 0.08rem);
+            object-fit: cover;
+            display: block;
+            border-radius: 0.5rem;
+        }
+
+        .photo-shot-label {
+            position: absolute;
+            left: 0.28rem;
+            right: 0.28rem;
+            bottom: 0.12rem;
+            z-index: 2;
+            text-align: center;
+            font-size: 0.56rem;
+            line-height: 1;
+            color: #475569;
+            font-weight: 800;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .photo-shot::before,
         .photo-shot::after {
             content: "";
             position: absolute;
-            inset: 0.18rem;
-            border-radius: 0.45rem;
+            inset: 0.18rem 0.18rem 0.46rem;
+            border-radius: 0.5rem;
         }
 
         .photo-shot::after {
             background: linear-gradient(180deg, rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0) 48%);
+        }
+
+        .photo-shot.has-image::before {
+            display: none;
         }
 
         .photo-shot-one::before {
@@ -674,30 +866,30 @@
         }
 
         .photo-shot-one {
-            right: 0;
-            top: 0;
-            width: 3.15rem;
-            height: 3.55rem;
-            transform: rotate(11deg);
+            left: 0.05rem;
+            bottom: 0.3rem;
+            width: 3.85rem;
+            height: 4.8rem;
+            transform: rotate(-11deg);
             z-index: 2;
         }
 
         .photo-shot-two {
-            right: 2.45rem;
-            top: 0.6rem;
-            width: 2.65rem;
-            height: 2.65rem;
-            transform: rotate(-8deg);
+            left: 4.2rem;
+            bottom: 0;
+            width: 3.85rem;
+            height: 4.8rem;
+            transform: rotate(12deg);
             z-index: 1;
         }
 
         .photo-panel:hover .photo-shot-one {
-            transform: rotate(16deg) translateY(-4px) scale(1.04);
+            transform: rotate(-15deg) translateY(-3px) scale(1.03);
             box-shadow: 0 14px 24px rgba(79, 98, 140, 0.24);
         }
 
         .photo-panel:hover .photo-shot-two {
-            transform: rotate(-12deg) translate(-10px, -2px) scale(1.03);
+            transform: rotate(15deg) translate(5px, -3px) scale(1.03);
             box-shadow: 0 12px 22px rgba(79, 98, 140, 0.2);
         }
 
@@ -801,7 +993,7 @@
         }
 
         .clock-panel {
-            min-height: 130px;
+            min-height: 118px;
             padding: 1.25rem;
             display: flex;
             flex-direction: column;
@@ -847,7 +1039,7 @@
             flex-direction: column;
             position: relative;
             overflow: hidden;
-            min-height: 0;
+            min-height: 398px;
         }
 
         .calendar-head {
@@ -898,7 +1090,7 @@
 
         .calendar-weekdays {
             gap: 0.25rem;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.35rem;
         }
 
         .calendar-weekday {
@@ -911,8 +1103,8 @@
         .calendar-weekday.is-sat { color: #60a5fa; font-weight: 900; }
 
         .calendar-days {
-            gap: 0.5rem 0.25rem;
-            min-height: 234px;
+            gap: 0.34rem 0.18rem;
+            min-height: 298px;
         }
 
         .calendar-day {
@@ -944,13 +1136,12 @@
         }
 
         .visitors-panel {
-            padding: 1.7rem 1.5rem;
-            min-height: 168px;
+            padding: 0.9rem 1.25rem;
+            min-height: 80px;
             display: flex;
             flex-direction: column;
             justify-content: center;
-            align-items: center;
-            text-align: center;
+            align-items: stretch;
             position: relative;
             overflow: hidden;
             margin-top: 0;
@@ -965,17 +1156,17 @@
         }
 
         .visitors-core {
-            display: flex;
-            flex-direction: column;
+            width: 100%;
+            display: grid;
+            grid-template-columns: auto 1fr auto;
             align-items: center;
-            justify-content: center;
-            gap: 0.95rem;
+            column-gap: 0.95rem;
             min-height: auto;
         }
 
         .visitors-badge {
-            width: 3.2rem;
-            height: 3.2rem;
+            width: 2.45rem;
+            height: 2.45rem;
             border-radius: 999px;
             background: rgba(255, 255, 255, 0.72);
             color: #3b82f6;
@@ -986,26 +1177,38 @@
             box-shadow: 0 8px 24px rgba(59, 130, 246, 0.1);
         }
 
-        .visitors-metric {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .visitors-metric strong {
-            font-size: 2.35rem;
+        .visitors-value {
+            margin: 0;
+            font-size: 1.9rem;
             line-height: 1;
             letter-spacing: -0.04em;
             color: #1e293b;
             font-weight: 900;
+            text-align: center;
+            min-width: 7ch;
         }
 
-        .visitors-metric span {
-            margin-top: 0.7rem;
-            font-size: 0.82rem;
-            letter-spacing: 0.22em;
+        [id^="busuanzi_container_"] {
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        [id^="busuanzi_value_"] {
+            display: inline-block;
+            min-width: 2ch;
+        }
+
+        .visitors-label {
+            display: block;
+            text-align: right;
+            font-size: 0.56rem;
+            line-height: 1.15;
+            letter-spacing: 0.18em;
             color: #64748b;
             font-weight: 800;
+            text-transform: uppercase;
+            white-space: nowrap;
         }
 
         ::-webkit-scrollbar {
@@ -1073,16 +1276,29 @@
             }
 
             .photo-stack {
-                left: 0.85rem;
-                bottom: 0.2rem;
+                left: 0.95rem;
+                bottom: 0.5rem;
                 transform: scale(0.88);
                 transform-origin: bottom left;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            body::after {
+                transition: none;
+            }
+
+            body.is-page-leaving .page-transition-target {
+                animation: none !important;
             }
         }
     </style>
 </head>
 <body>
     <%- body %>
+    <% if (theme.visitor_counter && theme.visitor_counter.enable && (!theme.visitor_counter.provider || theme.visitor_counter.provider === 'busuanzi')) { %>
+    <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <% } %>
 
     <script>
         function updateClock() {
@@ -1184,6 +1400,252 @@
         setInterval(updateClock, 1000);
         updateClock();
         renderCalendar(new Date());
+
+        (() => {
+            const root = document.documentElement;
+            document.body.classList.remove('is-page-leaving');
+            root.classList.remove('is-page-entering');
+
+            const shell = document.querySelector('.home-shell, .blog-shell, .post-shell, .friends-shell, .photo-wall-shell, .guestbook-shell');
+            if (!shell) return;
+
+            const transitionTargetsByShell = {
+                'home-shell': [
+                    '.profile-panel',
+                    '.nav-panel',
+                    '.hero-panel',
+                    '.latest-panel',
+                    '.photo-panel',
+                    '.activity-panel',
+                    '.clock-panel',
+                    '.calendar-panel',
+                    '.visitors-panel'
+                ],
+                'blog-shell': [
+                    '.blog-dock',
+                    '.blog-status',
+                    '.blog-hero',
+                    '.blog-panel'
+                ],
+                'post-shell': [
+                    '.post-dock',
+                    '.post-status',
+                    '.post-hero',
+                    '.post-panel'
+                ],
+                'friends-shell': [
+                    '.friends-dock',
+                    '.friends-status',
+                    '.friends-hero',
+                    '.friends-panel'
+                ],
+                'photo-wall-shell': [
+                    '.photo-wall-dock',
+                    '.photo-wall-status',
+                    '.photo-wall-board'
+                ],
+                'guestbook-shell': [
+                    '.guestbook-dock',
+                    '.guestbook-status',
+                    '.guestbook-board'
+                ]
+            };
+
+            const activeTargetSelector = Object.entries(transitionTargetsByShell)
+                .find(([className]) => shell.classList.contains(className))?.[1]?.join(', ');
+
+            if (!activeTargetSelector) return;
+
+            const targets = Array.from(shell.querySelectorAll(activeTargetSelector))
+                .filter((element) => !element.closest('.photo-wall-lightbox, .guestbook-lightbox, .guestbook-composer'));
+
+            if (!targets.length) return;
+
+            const shouldAnimatePath = (pathname) => {
+                if (!pathname) return false;
+                if (pathname.startsWith('/friends')) return true;
+                if (pathname.startsWith('/archives')) return true;
+                if (pathname.startsWith('/categories')) return true;
+                if (pathname.startsWith('/tags')) return true;
+                if (/^\/\d{4}\//.test(pathname)) return true;
+                return false;
+            };
+
+            const prefetched = new Set();
+            const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+            const TRANSITION_STORAGE_KEY = 'sukiame-page-transition';
+            const EXIT_ANIMATION_MS = 1080;
+            const ENTER_ANIMATION_MS = 640;
+            const MAX_STAGGER_MS = 56;
+            const NAVIGATION_DELAY_MS = prefersReducedMotion.matches ? 0 : 1000;
+
+            const afterNextPaint = (callback) => {
+                window.requestAnimationFrame(() => {
+                    window.requestAnimationFrame(callback);
+                });
+            };
+
+            const prefetchPage = (url) => {
+                if (!url || prefetched.has(url.href) || !shouldAnimatePath(url.pathname)) return;
+                prefetched.add(url.href);
+
+                const link = document.createElement('link');
+                link.rel = 'prefetch';
+                link.as = 'document';
+                link.href = url.href;
+                document.head.appendChild(link);
+
+                fetch(url.href, { credentials: 'same-origin' }).catch(() => {});
+            };
+
+            const applyExitVectors = () => {
+                const viewportCenterX = window.innerWidth / 2;
+                const viewportCenterY = window.innerHeight / 2;
+                const viewportRadius = Math.hypot(viewportCenterX, viewportCenterY);
+                const fallbackAngleStep = (Math.PI * 2) / Math.max(targets.length, 1);
+
+                targets.forEach((element, index) => {
+                    const rect = element.getBoundingClientRect();
+                    const centerX = rect.left + rect.width / 2;
+                    const centerY = rect.top + rect.height / 2;
+                    const deltaX = centerX - viewportCenterX;
+                    const deltaY = centerY - viewportCenterY;
+                    const magnitude = Math.hypot(deltaX, deltaY);
+                    const angle = magnitude > 1
+                        ? Math.atan2(deltaY, deltaX)
+                        : (fallbackAngleStep * index) - (Math.PI / 2);
+                    const radialX = Math.cos(angle);
+                    const radialY = Math.sin(angle);
+                    const travelDistance = viewportRadius + Math.max(rect.width, rect.height) * 0.62 + 150 + magnitude * 0.2;
+                    const midDistance = travelDistance * 0.56;
+                    const exitX = radialX * travelDistance;
+                    const exitY = radialY * travelDistance;
+                    const midX = radialX * midDistance;
+                    const midY = radialY * midDistance;
+                    const rotateSign = radialX === 0 ? (radialY >= 0 ? 1 : -1) : Math.sign(radialX);
+                    const rotate = rotateSign * (4 + Math.min((magnitude / Math.max(viewportRadius, 1)) * 4.5, 4.5));
+                    const midRotate = rotate * 0.46;
+                    const enterDistance = Math.min(76, 42 + magnitude * 0.075);
+                    const enterX = radialX * enterDistance;
+                    const enterY = radialY * enterDistance;
+                    const enterRotate = rotate * 0.34;
+                    const normalizedDistance = magnitude / Math.max(viewportRadius, 1);
+                    const delay = prefersReducedMotion.matches ? 0 : Math.pow(normalizedDistance, 1.12) * MAX_STAGGER_MS;
+                    const scale = Math.max(0.91, 0.972 - normalizedDistance * 0.024);
+
+                    element.classList.add('page-transition-target');
+                    element.style.setProperty('--page-transition-index', index);
+                    element.style.setProperty('--page-exit-duration', `${EXIT_ANIMATION_MS}ms`);
+                    element.style.setProperty('--page-enter-duration', `${ENTER_ANIMATION_MS}ms`);
+                    element.style.setProperty('--page-transition-delay', `${delay.toFixed(0)}ms`);
+                    element.style.setProperty('--page-exit-mid-x', `${midX.toFixed(2)}px`);
+                    element.style.setProperty('--page-exit-mid-y', `${midY.toFixed(2)}px`);
+                    element.style.setProperty('--page-exit-x', `${exitX.toFixed(2)}px`);
+                    element.style.setProperty('--page-exit-y', `${exitY.toFixed(2)}px`);
+                    element.style.setProperty('--page-exit-mid-rotate', `${midRotate.toFixed(2)}deg`);
+                    element.style.setProperty('--page-exit-rotate', `${rotate.toFixed(2)}deg`);
+                    element.style.setProperty('--page-enter-x', `${enterX.toFixed(2)}px`);
+                    element.style.setProperty('--page-enter-y', `${enterY.toFixed(2)}px`);
+                    element.style.setProperty('--page-enter-rotate', `${enterRotate.toFixed(2)}deg`);
+                    element.style.setProperty('--page-exit-scale', scale.toFixed(3));
+                });
+            };
+
+            applyExitVectors();
+
+            const transitionSnapshot = (() => {
+                try {
+                    const raw = window.sessionStorage.getItem(TRANSITION_STORAGE_KEY);
+                    if (!raw) return null;
+                    window.sessionStorage.removeItem(TRANSITION_STORAGE_KEY);
+                    return JSON.parse(raw);
+                } catch (error) {
+                    return null;
+                }
+            })();
+
+            if (
+                transitionSnapshot &&
+                !prefersReducedMotion.matches &&
+                transitionSnapshot.href === window.location.href &&
+                Date.now() - transitionSnapshot.at < 4000
+            ) {
+                afterNextPaint(() => {
+                    root.classList.remove('is-page-enter-prep');
+                    root.classList.add('is-page-entering');
+                });
+
+                window.setTimeout(() => {
+                    root.classList.remove('is-page-entering');
+                    root.classList.remove('is-page-enter-prep');
+                }, ENTER_ANIMATION_MS + MAX_STAGGER_MS + 100);
+            } else {
+                root.classList.remove('is-page-enter-prep');
+            }
+
+            let navigating = false;
+            document.addEventListener('click', (event) => {
+                if (navigating) return;
+
+                const link = event.target.closest('a');
+                if (!link) return;
+                if (link.target === '_blank' || link.hasAttribute('download')) return;
+                if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+
+                const href = link.getAttribute('href') || '';
+                if (!href || href.startsWith('#') || href.startsWith('mailto:') || href.startsWith('tel:') || href.endsWith('/atom.xml')) return;
+
+                const nextUrl = new URL(link.href, window.location.href);
+                if (nextUrl.origin !== window.location.origin) return;
+                if (nextUrl.href === window.location.href) return;
+                if (!shouldAnimatePath(nextUrl.pathname)) return;
+
+                navigating = true;
+                event.preventDefault();
+                applyExitVectors();
+                prefetchPage(nextUrl);
+                try {
+                    window.sessionStorage.setItem(TRANSITION_STORAGE_KEY, JSON.stringify({
+                        href: nextUrl.href,
+                        at: Date.now()
+                    }));
+                } catch (error) {}
+                afterNextPaint(() => {
+                    document.body.classList.add('is-page-leaving');
+                });
+
+                window.setTimeout(() => {
+                    window.location.href = nextUrl.href;
+                }, NAVIGATION_DELAY_MS);
+            });
+
+            document.addEventListener('pointerenter', (event) => {
+                const link = event.target.closest('a');
+                if (!link) return;
+                const href = link.getAttribute('href') || '';
+                if (!href || href.startsWith('#') || href.startsWith('mailto:') || href.startsWith('tel:')) return;
+                const nextUrl = new URL(link.href, window.location.href);
+                if (nextUrl.origin !== window.location.origin) return;
+                prefetchPage(nextUrl);
+            }, true);
+
+            window.setTimeout(() => {
+                ['/archives/', '/friends/'].forEach((path) => {
+                    prefetchPage(new URL(path, window.location.href));
+                });
+            }, 250);
+
+            window.addEventListener('pageshow', () => {
+                document.body.classList.remove('is-page-leaving');
+                navigating = false;
+            });
+
+            window.addEventListener('resize', () => {
+                if (!navigating) {
+                    applyExitVectors();
+                }
+            });
+        })();
     </script>
 </body>
 </html>
