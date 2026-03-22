@@ -1,237 +1,255 @@
-<%
-const latestPosts = site.posts.sort('date', -1).limit(3).toArray();
-const authorName = config.author || config.title || 'sukiame';
-const heroLine = config.description || 'The only way to do great is to love what you do.';
-const fallbackPosts = [
+<% const latestPosts=site.posts.sort('date', -1).limit(3).toArray(); const authorName=config.author || config.title
+  || 'sukiame' ; const heroLine=config.description || 'The only way to do great is to love what you do.' ; const
+  heroSource=config.description_source || '' ; const menuEntries=[ { key: 'Home' , fallbackLabel: 'Home' ,
+  fallbackUrl: '/' , fallbackIcon: 'fa-solid fa-house' , active: true }, { key: 'Archives' , fallbackLabel: 'Blog' ,
+  fallbackUrl: '/archives/' , fallbackIcon: 'fa-solid fa-feather-pointed' }, { key: 'Projects' ,
+  fallbackLabel: 'Projects' , fallbackUrl: '#' , fallbackIcon: 'fa-solid fa-box-open' }, { key: 'Guestbook' ,
+  fallbackLabel: 'Guestbook' , fallbackUrl: '#' , fallbackIcon: 'fa-solid fa-message' } ].map((item)=> {
+  const menuItem = theme.menu && theme.menu[item.key] ? theme.menu[item.key] : {};
+  const normalized = typeof menuItem === 'string' ? { url: menuItem } : menuItem;
+  return {
+  label: normalized.label || item.fallbackLabel,
+  url: normalized.url || item.fallbackUrl,
+  icon: normalized.icon || item.fallbackIcon,
+  active: typeof normalized.active === 'boolean' ? normalized.active : !!item.active
+  };
+  });
+
+  const socialEntries = Object.entries(theme.social || {}).map(([key, value]) => {
+  const normalized = typeof value === 'string' ? { url: value } : (value || {});
+  return {
+  label: key,
+  url: normalized.url || '#',
+  icon: normalized.icon || 'fa-solid fa-link'
+  };
+  });
+
+  const activityConfig = theme.activity || {};
+  const activityTitle = activityConfig.title || '代码活跃度';
+  const activitySubtitle = activityConfig.subtitle || 'Recent Contributions';
+  const activityIcon = activityConfig.icon || 'fa-brands fa-git-alt';
+  const activityCells = Array.isArray(activityConfig.resolved_cells) && activityConfig.resolved_cells.length
+  ? activityConfig.resolved_cells
+  : Array.isArray(activityConfig.cells) && activityConfig.cells.length
+  ? activityConfig.cells
+  : [0, 1, 2, 1, 0, 3, 2, 1, 3, 1, 2, 1, 2, 0, 1, 3, 1, 0, 2, 1];
+  const activityDays = activityCells.length;
+  const activityRows = activityDays > 10 ? 2 : 1;
+  const activityColumns = Math.ceil(activityDays / activityRows);
+
+  const photoWallConfig = theme.photo_wall || {};
+  const photoWallTitle = photoWallConfig.title || '照片墙';
+  const photoWallSubtitle = photoWallConfig.subtitle || ' ';
+  const photoWallIcon = photoWallConfig.icon || 'fa-solid fa-image';
+  const photoWallUrl = photoWallConfig.url || '#';
+  const photoWallHref = /^(?:[a-z][a-z0-9+.-]*:)?\/\//i.test(photoWallUrl) || /^(#|mailto:|tel:)/i.test(photoWallUrl)
+  ? photoWallUrl
+  : url_for(photoWallUrl);
+
+  const fallbackPosts = [
   {
-    title: '基于 Tailwind 的排版重构',
-    excerpt: '告别拥挤卡片，探索呼吸感与留白美学。',
-    date: new Date(),
-    path: '#',
-    icon: 'fa-solid fa-pen-nib',
-    color: 'blue'
+  title: '基于 Tailwind 的排版重构',
+  excerpt: '告别拥挤卡片，探索呼吸感与留白美学。',
+  date: new Date(),
+  path: '#',
+  icon: 'fa-solid fa-pen-nib',
+  color: 'blue'
   },
   {
-    title: 'Vite 项目加载性能优化',
-    excerpt: '如何将首屏加载速度提升 50% 以上。',
-    date: new Date(),
-    path: '#',
-    icon: 'fa-solid fa-bolt',
-    color: 'green'
+  title: 'Vite 项目加载性能优化',
+  excerpt: '如何将首屏加载速度提升 50% 以上。',
+  date: new Date(),
+  path: '#',
+  icon: 'fa-solid fa-bolt',
+  color: 'green'
   },
   {
-    title: '惊艳的 CSS 交互动效',
-    excerpt: '纯 CSS 实现的高级悬浮特效合集。',
-    date: new Date(),
-    path: '#',
-    icon: 'fa-solid fa-code',
-    color: 'purple'
+  title: '惊艳的 CSS 交互动效',
+  excerpt: '纯 CSS 实现的高级悬浮特效合集。',
+  date: new Date(),
+  path: '#',
+  icon: 'fa-solid fa-code',
+  color: 'purple'
   }
-];
-const displayPosts = (latestPosts.length ? latestPosts : fallbackPosts).slice(0, 3).map((post, index) => {
+  ];
+
+  const displayPosts = (latestPosts.length ? latestPosts : fallbackPosts).slice(0, 3).map((post, index) => {
   const icons = ['fa-solid fa-pen-nib', 'fa-solid fa-bolt', 'fa-solid fa-code'];
   const colors = ['blue', 'green', 'purple'];
   return {
-    title: post.title,
-    excerpt: post.excerpt
-      ? post.excerpt.replace(/<[^>]+>/g, '').trim()
-      : post.content
-        ? post.content.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim().slice(0, 34)
-        : fallbackPosts[index].excerpt,
-    date: post.date || new Date(),
-    path: post.path || '#',
-    icon: post.icon || icons[index],
-    color: post.color || colors[index]
-  };
-});
-const timelineItems = latestPosts.length
-  ? latestPosts.slice(0, 3).map((post) => ({
-      title: post.title,
-      date: date(post.date, 'YYYY.MM.DD')
-    }))
-  : [
-      { title: '引入日历排版网格', date: date(Date.now(), 'YYYY.MM.DD') },
-      { title: '第一版单页完成', date: '2026.03.20' },
-      { title: 'ICP 备案成功', date: '2024.06.15' }
-    ];
-%>
+  title: post.title,
+  excerpt: post.excerpt
+  ? post.excerpt.replace(/<[^>]+>/g, '').trim()
+    : post.content
+    ? post.content.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim().slice(0, 34)
+      : fallbackPosts[index].excerpt,
+      date: post.date || new Date(),
+      path: post.path || '#',
+      icon: post.icon || icons[index],
+      color: post.color || colors[index]
+      };
+      });
+      %>
 
-<div class="home-shell">
-  <div class="home-grid">
-    <aside class="left-column">
-      <section class="glass-card profile-panel">
-        <div class="profile-avatar-box">
-          <img
-            src="<%- theme.avatar || '/images/avatar-cat.svg' %>"
-            alt="avatar"
-            class="profile-avatar"
-          >
-          <div class="profile-status"></div>
-        </div>
-        <h1 class="profile-title font-cute"><%- authorName %></h1>
-        <p class="profile-subtitle">
-          <i class="fa-solid fa-cloud-rain text-rain-blue"></i>
-          喜欢下雨天的Coder
-        </p>
+      <div class="home-shell">
+        <div class="home-grid">
+          <aside class="left-column">
+            <section class="glass-card profile-panel">
+              <div class="profile-avatar-box">
+                <img src="<%- theme.avatar || '/images/avatar-cat.svg' %>" alt="avatar" class="profile-avatar">
+                <div class="profile-status"></div>
+              </div>
+              <h1 class="profile-title font-cute"><%- authorName %></h1>
+              <p class="profile-subtitle">
+                <i class="fa-solid fa-cloud-rain text-rain-blue"></i>
+                喜欢下雨天的Coder
+              </p>
 
-        <div class="profile-actions">
-          <a href="#" aria-label="GitHub"><i class="fa-brands fa-github"></i></a>
-          <a href="#" aria-label="Bilibili"><i class="fa-brands fa-bilibili"></i></a>
-          <a href="#" aria-label="Email"><i class="fa-solid fa-envelope"></i></a>
-        </div>
-      </section>
+              <div class="profile-actions">
+                <% socialEntries.forEach((item)=> { %>
+                  <a href="<%- item.url %>" aria-label="<%- item.label %>"><i class="<%- item.icon %>"></i></a>
+                  <% }) %>
+              </div>
+            </section>
 
-      <section class="glass-card nav-panel">
-        <div class="nav-panel-icon" aria-hidden="true">
-          <i class="fa-solid fa-compass"></i>
-        </div>
-        <h2 class="section-kicker">Navigation</h2>
-        <nav class="nav-links">
-          <a href="<%- url_for('/') %>" class="nav-link active-nav">
-            <span class="nav-link-label">
-              <i class="fa-solid fa-house"></i>
-              首页聚合
-            </span>
-          </a>
-          <a href="<%- url_for('/archives/') %>" class="nav-link">
-            <span class="nav-link-label">
-              <i class="fa-solid fa-feather-pointed"></i>
-              博客文章
-            </span>
-          </a>
-          <a href="#" class="nav-link">
-            <span class="nav-link-label">
-              <i class="fa-solid fa-box-open"></i>
-              开源项目
-            </span>
-            <i class="fa-solid fa-angle-right nav-link-arrow nav-link-arrow-fade"></i>
-          </a>
-          <a href="#" class="nav-link">
-            <span class="nav-link-label">
-              <i class="fa-solid fa-message"></i>
-              留言板
-            </span>
-            <i class="fa-solid fa-angle-right nav-link-arrow nav-link-arrow-fade"></i>
-          </a>
-        </nav>
-      </section>
-    </aside>
+            <section class="glass-card nav-panel">
+              <div class="nav-panel-icon" aria-hidden="true">
+                <i class="fa-solid fa-compass"></i>
+              </div>
+              <h2 class="section-kicker">Navigation</h2>
+              <nav class="nav-links">
+                <% menuEntries.forEach((item)=> { %>
+                  <a href="<%- item.url === '#' ? '#' : url_for(item.url) %>"
+                    class="nav-link <%= item.active ? 'active-nav' : '' %>">
+                    <span class="nav-link-label">
+                      <i class="<%- item.icon %>"></i>
+                      <%- item.label %>
+                    </span>
+                  </a>
+                  <% }) %>
+              </nav>
+            </section>
+          </aside>
 
-    <main class="center-column">
-      <section class="glass-card hero-panel">
-        <i class="fa-solid fa-cloud-showers-heavy hero-illustration" aria-hidden="true"></i>
-        <div class="hero-content">
-          <h3 class="hero-greeting">Good <span id="greeting">Evening</span></h3>
-          <h2 class="hero-title">
-            I'm
-            <span class="hero-name font-cute"><%- authorName %></span>
-          </h2>
-          <p class="hero-copy">
-            <%- heroLine %>
-          </p>
-        </div>
-      </section>
-
-      <div class="center-bottom-grid">
-        <section class="glass-card latest-panel">
-          <div class="panel-head">
-            <h2 class="panel-title">
-              <span class="panel-title-bar"></span>
-              最新文章
-            </h2>
-            <a href="<%- url_for('/archives/') %>" class="panel-link">
-              View All <i class="fa-solid fa-arrow-right"></i>
-            </a>
-          </div>
-
-          <div class="post-list">
-            <% displayPosts.forEach((post) => { %>
-              <a href="<%- post.path === '#' ? '#' : url_for(post.path) %>" class="post-row">
-                <div class="post-icon post-icon-<%- post.color %>">
-                  <i class="<%- post.icon %>"></i>
+          <main class="center-column">
+            <section class="glass-card hero-panel">
+              <i class="fa-solid fa-cloud-showers-heavy hero-illustration" aria-hidden="true"></i>
+              <div class="hero-content">
+                <h3 class="hero-greeting">Good <span id="greeting">Evening</span></h3>
+                <h2 class="hero-title">
+                  Hi, I'm
+                  <span class="hero-name font-cute"><%- authorName %>!</span>
+                </h2>
+                <div class="hero-copy">
+                  <p class="hero-copy-text"><%- heroLine %></p>
+                  <% if (heroSource) { %>
+                    <span class="hero-copy-source"><%- heroSource %></span>
+                    <% } %>
                 </div>
-                <div class="post-text">
-                  <h3 class="post-title"><%- post.title %></h3>
-                  <p class="post-excerpt"><%- post.excerpt %></p>
+              </div>
+            </section>
+
+            <div class="center-bottom-grid">
+              <section class="glass-card latest-panel">
+                <div class="panel-head">
+                  <h2 class="panel-title">
+                    <span class="panel-title-bar"></span>
+                    Recent Posts
+                  </h2>
+                  <a href="<%- url_for('/archives/') %>" class="panel-link">
+                    View All <i class="fa-solid fa-arrow-right"></i>
+                  </a>
                 </div>
-                <div class="post-date"><%- date(post.date, 'MM-DD') %></div>
-              </a>
-            <% }) %>
-          </div>
-        </section>
 
-        <div class="side-stack">
-          <a href="#" class="glass-card photo-panel">
-            <div class="photo-glow"></div>
-            <div class="photo-shot photo-shot-one"></div>
-            <div class="photo-shot photo-shot-two"></div>
-            <div class="photo-badge">
-              <i class="fa-solid fa-images"></i>
-            </div>
-            <div class="photo-copy">
-              <h3>照片墙</h3>
-              <p>雨天的镜头记录</p>
-            </div>
-          </a>
+                <div class="post-list">
+                  <% displayPosts.forEach((post)=> { %>
+                    <a href="<%- post.path === '#' ? '#' : url_for(post.path) %>" class="post-row">
+                      <div class="post-icon post-icon-<%- post.color %>">
+                        <i class="<%- post.icon %>"></i>
+                      </div>
+                      <div class="post-text">
+                        <h3 class="post-title"><%- post.title %></h3>
+                        <p class="post-excerpt"><%- post.excerpt %></p>
+                      </div>
+                      <div class="post-date"><%- date(post.date, 'MM-DD' ) %></div>
+                    </a>
+                    <% }) %>
+                </div>
+              </section>
 
-          <section class="glass-card stack-panel">
-            <div class="stack-glow"></div>
-            <div class="stack-head">
-              <h3>技能栈</h3>
-              <p>Tech Stack</p>
+              <div class="side-stack">
+                <a href="<%- photoWallHref %>" class="glass-card photo-panel">
+                  <div class="photo-glow"></div>
+                  <div class="photo-copy">
+                    <h3><%- photoWallTitle %></h3>
+                    <p><%- photoWallSubtitle %></p>
+                  </div>
+                  <div class="photo-badge">
+                    <i class="<%- photoWallIcon %>"></i>
+                  </div>
+                  <div class="photo-stack" aria-hidden="true">
+                    <div class="photo-shot photo-shot-one"></div>
+                    <div class="photo-shot photo-shot-two"></div>
+                  </div>
+                </a>
+
+                <section class="glass-card activity-panel">
+                  <div class="activity-glow"></div>
+                  <div class="activity-head">
+                    <div>
+                      <h3><%- activityTitle %></h3>
+                      <p>Last <%- activityDays %> Days</p>
+                    </div>
+                    <i class="<%- activityIcon %> activity-icon"></i>
+                  </div>
+                  <div class="activity-grid"
+                    style="--activity-columns: <%- activityColumns %>; --activity-rows: <%- activityRows %>;">
+                    <% activityCells.forEach((level)=> { %>
+                      <span class="activity-cell level-<%- level %>"></span>
+                      <% }) %>
+                  </div>
+                </section>
+              </div>
             </div>
-            <div class="stack-grid">
-              <div class="stack-tile html"><i class="fa-brands fa-html5"></i></div>
-              <div class="stack-tile css"><i class="fa-brands fa-css3-alt"></i></div>
-              <div class="stack-tile js"><i class="fa-brands fa-js"></i></div>
-              <div class="stack-tile vue"><i class="fa-brands fa-vuejs"></i></div>
-            </div>
-          </section>
+          </main>
+
+          <aside class="right-column">
+            <section class="glass-card clock-panel">
+              <div class="clock-display">
+                <span id="time-hours">00</span>
+                <span class="clock-separator">:</span>
+                <span id="time-minutes">00</span>
+              </div>
+              <div class="clock-meta" id="date-full">2026 . 03 . 21 SAT</div>
+            </section>
+
+            <section class="glass-card calendar-panel">
+              <div class="calendar-head">
+                <span class="calendar-month" id="calendar-title">March 2026</span>
+                <div class="calendar-arrows">
+                  <button class="calendar-arrow" id="calendar-prev" type="button" aria-label="Previous month">
+                    <i class="fa-solid fa-angle-left"></i>
+                  </button>
+                  <button class="calendar-arrow" id="calendar-next" type="button" aria-label="Next month">
+                    <i class="fa-solid fa-angle-right"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="calendar-weekdays" id="calendar-weekdays"></div>
+              <div class="calendar-days" id="calendar-days"></div>
+            </section>
+
+            <section class="glass-card visitors-panel" aria-label="Total visitors">
+              <div class="visitors-core">
+                <div class="visitors-badge">
+                  <i class="fa-solid fa-user-group"></i>
+                </div>
+                <div class="visitors-metric">
+                  <strong>521, 314</strong>
+                  <span>TOTAL VISITORS</span>
+                </div>
+              </div>
+            </section>
+          </aside>
         </div>
       </div>
-    </main>
-
-    <aside class="right-column">
-      <section class="glass-card clock-panel">
-        <div class="clock-display">
-          <span id="time-hours">00</span>
-          <span class="clock-separator">:</span>
-          <span id="time-minutes">00</span>
-        </div>
-        <div class="clock-meta" id="date-full">2026 . 03 . 21 SAT</div>
-      </section>
-
-      <section class="glass-card calendar-panel">
-        <div class="calendar-head">
-          <span class="calendar-month" id="calendar-title">March 2026</span>
-          <div class="calendar-arrows">
-            <button class="calendar-arrow" id="calendar-prev" type="button" aria-label="Previous month">
-              <i class="fa-solid fa-angle-left"></i>
-            </button>
-            <button class="calendar-arrow" id="calendar-next" type="button" aria-label="Next month">
-              <i class="fa-solid fa-angle-right"></i>
-            </button>
-          </div>
-        </div>
-        <div class="calendar-weekdays" id="calendar-weekdays"></div>
-        <div class="calendar-days" id="calendar-days"></div>
-      </section>
-
-      <section class="glass-card visitors-panel">
-        <h2 class="section-kicker visitors-kicker">
-          <i class="fa-solid fa-chart-line"></i>
-          Visitors
-        </h2>
-        <div class="visitors-core">
-          <div class="visitors-badge">
-            <i class="fa-solid fa-users"></i>
-          </div>
-          <div class="visitors-metric">
-            <strong>12,845</strong>
-            <span>累计访客</span>
-          </div>
-        </div>
-      </section>
-    </aside>
-  </div>
-</div>
