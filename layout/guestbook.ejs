@@ -1,0 +1,1390 @@
+<%
+const guestbookConfig = theme.guestbook || {};
+const boardTitle = guestbookConfig.page_title || guestbookConfig.title || page.title || 'Guestbook';
+const boardSubtitle = guestbookConfig.page_subtitle || guestbookConfig.subtitle || 'Little Notes';
+const boardIcon = guestbookConfig.icon || 'fa-solid fa-message';
+const boardNote = guestbookConfig.note || 'A sky of sticky notes, each one carrying a little warmth.';
+const boardCountLabel = guestbookConfig.count_label || 'Notes';
+const composerConfig = guestbookConfig.composer || {};
+const photoWallConfig = theme.photo_wall || {};
+
+const resolveUrl = (value) => {
+  const link = value || '#';
+  return /^(?:[a-z][a-z0-9+.-]*:)?\/\//i.test(link) || /^(#|mailto:|tel:)/i.test(link)
+    ? link
+    : url_for(link);
+};
+
+const getEntry = (group, key) => {
+  const source = group && group[key] ? group[key] : {};
+  return typeof source === 'string' ? { url: source } : source;
+};
+
+const homeMenu = getEntry(theme.menu, 'Home');
+const archiveMenu = getEntry(theme.menu, 'Archives');
+const guestbookMenu = getEntry(theme.menu, 'Guestbook');
+
+const dockLinks = [
+  {
+    label: homeMenu.label || 'Home',
+    url: homeMenu.url || '/',
+    icon: homeMenu.icon || 'fa-solid fa-house'
+  },
+  {
+    label: archiveMenu.label || 'Blog',
+    url: archiveMenu.url || '/archives/',
+    icon: archiveMenu.icon || 'fa-solid fa-feather-pointed'
+  },
+  photoWallConfig.url
+    ? {
+        label: photoWallConfig.title || 'Photo Wall',
+        url: photoWallConfig.url,
+        icon: photoWallConfig.icon || 'fa-solid fa-image'
+      }
+    : null,
+  {
+    label: guestbookMenu.label || boardTitle,
+    url: guestbookMenu.url && guestbookMenu.url !== '#' ? guestbookMenu.url : '/guestbook/',
+    icon: guestbookMenu.icon || boardIcon,
+    active: true
+  }
+].filter(Boolean);
+
+const tonePalette = {
+  yellow: { base: '#fff3a8', deep: '#f9e485', fold: '#efd05f', shadow: 'rgba(236, 201, 84, 0.28)' },
+  pink: { base: '#ffd8df', deep: '#ffc5d0', fold: '#f2aebf', shadow: 'rgba(241, 171, 194, 0.28)' },
+  blue: { base: '#d2eaff', deep: '#b9dcfb', fold: '#9dcaef', shadow: 'rgba(117, 174, 226, 0.28)' },
+  green: { base: '#daf3d5', deep: '#c9ebc2', fold: '#aed8a6', shadow: 'rgba(130, 193, 127, 0.28)' },
+  lavender: { base: '#e7ddff', deep: '#d8cbfb', fold: '#bba8ee', shadow: 'rgba(168, 146, 231, 0.28)' },
+  peach: { base: '#ffe4cb', deep: '#ffd6b3', fold: '#f3c18f', shadow: 'rgba(237, 171, 118, 0.28)' }
+};
+
+const defaultItems = [
+  { author: '雨天', date: '2026.03.22', tone: 'yellow', message: '首页的氛围真的很舒服，像是下雨天打开窗时吹进来的那一阵风。', x: 8, y: 16, width: 214, rotate: -10, delay: 0 },
+  { author: 'Momo', date: '2026.03.21', tone: 'pink', message: '留言板做成便利贴这个想法太可爱了，已经开始期待后面的真实留言版本。', x: 30, y: 12, width: 208, rotate: 6, delay: 1 },
+  { author: 'Kiko', date: '2026.03.20', tone: 'blue', message: '来踩踩，顺便留下一句加油。愿你写的每个页面都有自己独特的小情绪。', x: 54, y: 18, width: 218, rotate: -8, delay: 2 },
+  { author: '星屑', date: '2026.03.20', tone: 'green', message: '我很喜欢这种可以随手拖动的感觉，好像真的在桌面上摆便利贴。', x: 78, y: 14, width: 204, rotate: 11, delay: 3 },
+  { author: 'Nagi', date: '2026.03.18', tone: 'lavender', message: '你的网站越来越像一个有故事的小空间了，既轻盈又有记忆点。', x: 16, y: 45, width: 216, rotate: 12, delay: 4 },
+  { author: 'Yuki', date: '2026.03.17', tone: 'peach', message: '今天也要继续开心写代码。等留言功能接上之后，我想第一个认真写一条。', x: 40, y: 42, width: 212, rotate: -5, delay: 5 },
+  { author: '阿秋', date: '2026.03.16', tone: 'yellow', message: '如果未来这里能加上很多人的短句，这一页一定会特别温暖。', x: 67, y: 43, width: 206, rotate: 8, delay: 6 },
+  { author: 'Sora', date: '2026.03.15', tone: 'blue', message: '先放一张虚拟便签占位，提醒自己以后回来写一句真正想说的话。', x: 24, y: 72, width: 210, rotate: -14, delay: 7 },
+  { author: 'Haru', date: '2026.03.14', tone: 'pink', message: '这块如果以后能加上便签折角、贴纸和小图章，肯定会更有手账感。', x: 51, y: 70, width: 216, rotate: 9, delay: 8 },
+  { author: 'Lune', date: '2026.03.13', tone: 'green', message: '路过，留下一句晚上好。希望你喜欢自己一点一点把站点做出来的过程。', x: 78, y: 69, width: 206, rotate: -7, delay: 9 }
+];
+
+const rawItems = Array.isArray(guestbookConfig.items) && guestbookConfig.items.length
+  ? guestbookConfig.items
+  : defaultItems;
+
+const noteItems = rawItems.map((item, index) => {
+  const tone = tonePalette[item.tone] ? item.tone : 'yellow';
+  return {
+    author: item.author || `Guest ${index + 1}`,
+    date: item.date || '',
+    tone,
+    toneStyle: tonePalette[tone],
+    message: item.message || 'Leave a little note here.',
+    x: typeof item.x === 'number' ? item.x : 10 + (index % 4) * 22,
+    y: typeof item.y === 'number' ? item.y : 18 + Math.floor(index / 4) * 24,
+    width: typeof item.width === 'number' ? item.width : 210,
+    rotate: typeof item.rotate === 'number' ? item.rotate : 0,
+    delay: typeof item.delay === 'number' ? item.delay : index
+  };
+});
+
+const composerCard = {
+  title: composerConfig.title || 'Write a Note',
+  subtitle: composerConfig.subtitle || 'Leave a little hello for the next visitor.',
+  button: composerConfig.button || 'Start Writing',
+  tone: tonePalette[composerConfig.tone] ? composerConfig.tone : 'peach',
+  x: typeof composerConfig.x === 'number' ? composerConfig.x : 82,
+  y: typeof composerConfig.y === 'number' ? composerConfig.y : 42,
+  width: typeof composerConfig.width === 'number' ? composerConfig.width : 214,
+  rotate: typeof composerConfig.rotate === 'number' ? composerConfig.rotate : -8
+};
+const composerToneStyle = tonePalette[composerCard.tone];
+%>
+
+<style>
+    .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+    }
+
+    .guestbook-shell {
+        position: relative;
+        min-height: 100vh;
+        padding: 1rem;
+        overflow: hidden;
+    }
+
+    .guestbook-shell::before,
+    .guestbook-shell::after {
+        content: "";
+        position: absolute;
+        inset: -12%;
+        pointer-events: none;
+    }
+
+    .guestbook-shell::before {
+        background:
+            radial-gradient(circle at 14% 16%, rgba(255, 255, 255, 0.65), rgba(255, 255, 255, 0) 22%),
+            radial-gradient(circle at 12% 85%, rgba(253, 224, 71, 0.22), rgba(253, 224, 71, 0) 18%),
+            radial-gradient(circle at 30% 88%, rgba(125, 211, 252, 0.24), rgba(125, 211, 252, 0) 20%),
+            radial-gradient(circle at 60% 84%, rgba(134, 239, 172, 0.26), rgba(134, 239, 172, 0) 18%),
+            radial-gradient(circle at 85% 78%, rgba(196, 181, 253, 0.2), rgba(196, 181, 253, 0) 22%);
+        filter: blur(18px);
+        opacity: 0.95;
+    }
+
+    .guestbook-shell::after {
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0.08));
+    }
+
+    .guestbook-dock,
+    .guestbook-status {
+        position: absolute;
+        z-index: 20;
+    }
+
+    .guestbook-dock {
+        top: 1rem;
+        left: 1rem;
+        padding: 0.6rem 0.75rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.55rem;
+    }
+
+    .guestbook-status {
+        top: 1rem;
+        right: 1rem;
+        padding: 0.75rem 0.95rem;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.16rem;
+        min-width: 12rem;
+    }
+
+    .guestbook-status strong {
+        font-size: 0.98rem;
+        color: #1e293b;
+        font-weight: 800;
+    }
+
+    .guestbook-status span {
+        font-size: 0.76rem;
+        color: #64748b;
+        font-weight: 700;
+    }
+
+    .guestbook-status small {
+        font-size: 0.72rem;
+        color: #94a3b8;
+        font-weight: 700;
+    }
+
+    .dock-avatar,
+    .dock-link {
+        width: 2.35rem;
+        height: 2.35rem;
+        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255, 255, 255, 0.66);
+        color: #64748b;
+        box-shadow: 0 6px 18px rgba(148, 163, 184, 0.12);
+        transition: transform 0.25s ease, background 0.25s ease, color 0.25s ease;
+    }
+
+    .dock-avatar img {
+        width: 1.8rem;
+        height: 1.8rem;
+        border-radius: 999px;
+        object-fit: cover;
+    }
+
+    .dock-link:hover,
+    .dock-avatar:hover {
+        transform: translateY(-2px);
+        background: rgba(255, 255, 255, 0.82);
+    }
+
+    .dock-link.is-active {
+        background: rgba(255, 255, 255, 0.84);
+        color: #38bdf8;
+    }
+
+    .guestbook-board {
+        position: relative;
+        min-height: calc(100vh - 2rem);
+        padding-top: 5rem;
+        z-index: 1;
+    }
+
+    .sticky-note-card {
+        position: absolute;
+        left: var(--note-left);
+        top: var(--note-top);
+        width: var(--note-width);
+        transform: translate(var(--note-dx, 0px), var(--note-dy, 0px));
+        transform-origin: center center;
+        display: block;
+        animation: guestbookReveal 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+        animation-delay: calc(var(--note-delay) * 90ms);
+        transition: transform 0.28s ease;
+        cursor: grab;
+        touch-action: none;
+        user-select: none;
+        -webkit-user-select: none;
+        will-change: transform;
+    }
+
+    .sticky-note-card:hover {
+        z-index: 3;
+    }
+
+    .sticky-note-card.is-dragging {
+        cursor: grabbing;
+        transition: none;
+        z-index: 40;
+    }
+
+    .sticky-note-paper {
+        position: relative;
+        min-height: 11.75rem;
+        padding: 1rem 1rem 1.1rem;
+        border-radius: 0.22rem;
+        background:
+            linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0)),
+            repeating-linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0, rgba(255, 255, 255, 0.08) 1px, transparent 1px, transparent 30px),
+            linear-gradient(180deg, var(--note-base) 0%, var(--note-deep) 100%);
+        box-shadow: 0 18px 42px var(--note-shadow);
+        transform: rotate(var(--note-rotate));
+        transform-origin: center center;
+        transition: transform 0.28s ease, box-shadow 0.28s ease;
+        overflow: hidden;
+    }
+
+    .sticky-note-paper::before {
+        content: "";
+        position: absolute;
+        top: 0.7rem;
+        left: 50%;
+        width: 4.4rem;
+        height: 1rem;
+        transform: translateX(-50%) rotate(-4deg);
+        border-radius: 0.2rem;
+        background: rgba(255, 255, 255, 0.3);
+        box-shadow: 0 2px 6px rgba(255, 255, 255, 0.22);
+    }
+
+    .sticky-note-paper::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 2.2rem;
+        height: 2.2rem;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.18), var(--note-fold));
+        clip-path: polygon(100% 0, 0 0, 100% 100%);
+        box-shadow: -2px 2px 6px rgba(0, 0, 0, 0.06);
+    }
+
+    .sticky-note-card:hover .sticky-note-paper {
+        transform: rotate(var(--note-rotate)) translateY(-10px) scale(1.02);
+        box-shadow: 0 24px 50px var(--note-shadow);
+    }
+
+    .sticky-note-card.is-dragging .sticky-note-paper {
+        transform: rotate(var(--note-rotate)) scale(1.03);
+    }
+
+    .sticky-note-head,
+    .sticky-note-foot {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+    }
+
+    .sticky-note-head {
+        margin-top: 1.15rem;
+    }
+
+    .sticky-note-author {
+        font-size: 0.84rem;
+        font-weight: 900;
+        color: #334155;
+        letter-spacing: 0.02em;
+    }
+
+    .sticky-note-badge {
+        width: 1.8rem;
+        height: 1.8rem;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.28);
+        color: rgba(30, 41, 59, 0.72);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.78rem;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    }
+
+    .sticky-note-message {
+        position: relative;
+        z-index: 1;
+        margin: 0.9rem 0 1.15rem;
+        color: #334155;
+        font-size: 1rem;
+        line-height: 1.72;
+        font-family: 'ZCOOL KuaiLe', cursive;
+        display: -webkit-box;
+        -webkit-line-clamp: 5;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .sticky-note-foot {
+        margin-top: auto;
+        font-size: 0.72rem;
+        color: rgba(71, 85, 105, 0.8);
+        font-weight: 700;
+        letter-spacing: 0.03em;
+    }
+
+    .sticky-note-hint {
+        opacity: 0.72;
+    }
+
+    .composer-note-card {
+        position: absolute;
+        left: var(--composer-left);
+        top: var(--composer-top);
+        width: var(--composer-width);
+        transform: rotate(var(--composer-rotate));
+        transform-origin: center center;
+        z-index: 18;
+    }
+
+    .composer-note-paper {
+        position: relative;
+        min-height: 12rem;
+        padding: 1.15rem 1.1rem 1rem;
+        border-radius: 0.28rem;
+        background:
+            linear-gradient(180deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0)),
+            linear-gradient(180deg, var(--composer-base) 0%, var(--composer-deep) 100%);
+        box-shadow: 0 22px 46px var(--composer-shadow);
+        overflow: hidden;
+    }
+
+    .composer-note-paper::before {
+        content: "";
+        position: absolute;
+        top: 0.8rem;
+        left: 50%;
+        width: 4.7rem;
+        height: 1rem;
+        transform: translateX(-50%) rotate(-5deg);
+        border-radius: 0.24rem;
+        background: rgba(255, 255, 255, 0.34);
+        box-shadow: 0 2px 6px rgba(255, 255, 255, 0.2);
+    }
+
+    .composer-note-paper::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 2.4rem;
+        height: 2.4rem;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), var(--composer-fold));
+        clip-path: polygon(100% 0, 0 0, 100% 100%);
+    }
+
+    .composer-note-head,
+    .composer-note-foot {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 0.8rem;
+    }
+
+    .composer-note-head {
+        margin-top: 1.1rem;
+    }
+
+    .composer-note-title {
+        font-size: 1rem;
+        font-weight: 900;
+        color: #334155;
+    }
+
+    .composer-note-badge {
+        width: 1.9rem;
+        height: 1.9rem;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.28);
+        color: rgba(51, 65, 85, 0.76);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.8rem;
+    }
+
+    .composer-note-copy {
+        position: relative;
+        z-index: 1;
+        margin: 0.95rem 0 1.1rem;
+        font-size: 0.98rem;
+        line-height: 1.7;
+        color: #334155;
+        font-family: 'ZCOOL KuaiLe', cursive;
+    }
+
+    .composer-note-button {
+        border: 0;
+        padding: 0.72rem 0.95rem;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.72);
+        color: #334155;
+        font-weight: 800;
+        box-shadow: 0 10px 24px rgba(148, 163, 184, 0.12);
+        transition: transform 0.2s ease, background 0.2s ease;
+    }
+
+    .composer-note-button:hover {
+        transform: translateY(-2px);
+        background: rgba(255, 255, 255, 0.86);
+    }
+
+    .composer-note-foot {
+        position: relative;
+        z-index: 1;
+        font-size: 0.72rem;
+        color: rgba(71, 85, 105, 0.82);
+        font-weight: 700;
+    }
+
+    body.guestbook-composer-open {
+        overflow: hidden;
+    }
+
+    .guestbook-composer {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+        background: rgba(15, 23, 42, 0.42);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        transition: opacity 0.24s ease, visibility 0.24s ease;
+        z-index: 130;
+    }
+
+    .guestbook-composer.is-open {
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+    }
+
+    .guestbook-composer-dialog {
+        position: relative;
+        width: min(32rem, 100%);
+        padding: 1.4rem 1.3rem 1.25rem;
+        border-radius: 1.4rem;
+    }
+
+    .guestbook-composer-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .guestbook-composer-head strong {
+        display: block;
+        font-size: 1.05rem;
+        color: #1e293b;
+        font-weight: 900;
+    }
+
+    .guestbook-composer-head span {
+        display: block;
+        margin-top: 0.2rem;
+        font-size: 0.78rem;
+        color: #64748b;
+        font-weight: 700;
+    }
+
+    .guestbook-composer-close {
+        width: 2.45rem;
+        height: 2.45rem;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.72);
+        color: #475569;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 10px 24px rgba(148, 163, 184, 0.12);
+        transition: transform 0.2s ease, background 0.2s ease;
+    }
+
+    .guestbook-composer-close:hover {
+        transform: translateY(-2px);
+        background: rgba(255, 255, 255, 0.88);
+    }
+
+    .guestbook-form {
+        display: grid;
+        gap: 0.9rem;
+    }
+
+    .guestbook-form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.9rem;
+    }
+
+    .guestbook-field {
+        display: flex;
+        flex-direction: column;
+        gap: 0.42rem;
+    }
+
+    .guestbook-field label {
+        font-size: 0.76rem;
+        color: #64748b;
+        font-weight: 800;
+        letter-spacing: 0.02em;
+    }
+
+    .guestbook-input,
+    .guestbook-textarea,
+    .guestbook-select {
+        width: 100%;
+        border: 1px solid rgba(255, 255, 255, 0.72);
+        border-radius: 1rem;
+        background: rgba(255, 255, 255, 0.7);
+        color: #334155;
+        font: inherit;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.36);
+    }
+
+    .guestbook-input,
+    .guestbook-select {
+        height: 2.8rem;
+        padding: 0 0.95rem;
+    }
+
+    .guestbook-textarea {
+        min-height: 8rem;
+        padding: 0.85rem 0.95rem;
+        resize: vertical;
+        line-height: 1.7;
+    }
+
+    .guestbook-input:focus,
+    .guestbook-textarea:focus,
+    .guestbook-select:focus {
+        outline: none;
+        border-color: rgba(56, 189, 248, 0.42);
+        box-shadow: 0 0 0 4px rgba(186, 230, 253, 0.55);
+    }
+
+    .guestbook-form-foot {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .guestbook-form-hint {
+        font-size: 0.74rem;
+        color: #94a3b8;
+        font-weight: 700;
+    }
+
+    .guestbook-submit {
+        border: 0;
+        padding: 0.78rem 1.2rem;
+        border-radius: 999px;
+        background: linear-gradient(135deg, #7dd3fc, #a7f3d0);
+        color: #1e293b;
+        font-weight: 900;
+        box-shadow: 0 14px 30px rgba(125, 211, 252, 0.26);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .guestbook-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 18px 34px rgba(125, 211, 252, 0.3);
+    }
+
+    .guestbook-submit:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+    }
+
+    body.guestbook-lightbox-open {
+        overflow: hidden;
+    }
+
+    .guestbook-lightbox {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+        background: rgba(15, 23, 42, 0.45);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        transition: opacity 0.24s ease, visibility 0.24s ease;
+        z-index: 120;
+    }
+
+    .guestbook-lightbox.is-open {
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+    }
+
+    .guestbook-lightbox-dialog {
+        position: relative;
+        width: min(30rem, 100%);
+    }
+
+    .guestbook-lightbox-paper {
+        min-height: 18rem;
+        padding: 1.4rem 1.4rem 1.35rem;
+        border-radius: 0.28rem;
+        box-shadow: 0 30px 80px rgba(15, 23, 42, 0.24);
+        background:
+            linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0)),
+            repeating-linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0, rgba(255, 255, 255, 0.08) 1px, transparent 1px, transparent 32px),
+            linear-gradient(180deg, var(--note-base) 0%, var(--note-deep) 100%);
+        overflow: hidden;
+    }
+
+    .guestbook-lightbox-paper::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 2.5rem;
+        height: 2.5rem;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.18), var(--note-fold));
+        clip-path: polygon(100% 0, 0 0, 100% 100%);
+    }
+
+    .guestbook-lightbox-close {
+        position: absolute;
+        top: -0.8rem;
+        right: -0.8rem;
+        width: 2.6rem;
+        height: 2.6rem;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.9);
+        color: #334155;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 14px 30px rgba(15, 23, 42, 0.16);
+        transition: transform 0.2s ease, background 0.2s ease;
+    }
+
+    .guestbook-lightbox-close:hover {
+        transform: translateY(-2px);
+        background: #fff;
+    }
+
+    .guestbook-lightbox-head,
+    .guestbook-lightbox-foot {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        color: #334155;
+    }
+
+    .guestbook-lightbox-head {
+        margin-top: 0.6rem;
+        align-items: center;
+    }
+
+    .guestbook-lightbox-author {
+        font-size: 1rem;
+        font-weight: 900;
+    }
+
+    .guestbook-lightbox-meta {
+        font-size: 0.78rem;
+        font-weight: 700;
+        color: rgba(51, 65, 85, 0.78);
+    }
+
+    .guestbook-lightbox-message {
+        position: relative;
+        z-index: 1;
+        margin: 1rem 0 1.4rem;
+        white-space: pre-wrap;
+        font-size: 1.08rem;
+        line-height: 1.9;
+        color: #334155;
+        font-family: 'ZCOOL KuaiLe', cursive;
+    }
+
+    .guestbook-lightbox-foot {
+        font-size: 0.78rem;
+        font-weight: 700;
+        color: rgba(51, 65, 85, 0.76);
+    }
+
+    .guestbook-lightbox-label {
+        opacity: 0.8;
+    }
+
+    @keyframes guestbookReveal {
+        from {
+            opacity: 0;
+            transform: translate(var(--note-dx, 0px), calc(var(--note-dy, 0px) + 18px)) scale(0.94);
+        }
+
+        to {
+            opacity: 1;
+            transform: translate(var(--note-dx, 0px), var(--note-dy, 0px));
+        }
+    }
+
+    @media (max-width: 1024px) {
+        .guestbook-status {
+            min-width: auto;
+        }
+
+        .guestbook-board {
+            min-height: 78rem;
+        }
+    }
+
+    @media (max-width: 900px) {
+        .guestbook-shell {
+            padding: 1rem;
+        }
+
+        .guestbook-dock,
+        .guestbook-status {
+            position: relative;
+            top: auto;
+            left: auto;
+            right: auto;
+            margin-bottom: 0.85rem;
+        }
+
+        .guestbook-dock {
+            width: fit-content;
+        }
+
+        .guestbook-status {
+            display: inline-flex;
+        }
+
+        .guestbook-board {
+            min-height: auto;
+            padding-top: 0.5rem;
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 1.2rem;
+            align-items: start;
+        }
+
+        .sticky-note-card {
+            position: relative;
+            left: auto;
+            top: auto;
+            width: 100%;
+            max-width: 16rem;
+            margin: 0 auto;
+        }
+    }
+
+    @media (max-width: 640px) {
+        .guestbook-dock {
+            width: 100%;
+            justify-content: space-between;
+            gap: 0.4rem;
+        }
+
+        .dock-avatar,
+        .dock-link {
+            width: 2.1rem;
+            height: 2.1rem;
+        }
+
+        .guestbook-status {
+            width: 100%;
+        }
+
+        .guestbook-board {
+            grid-template-columns: 1fr;
+        }
+
+        .composer-note-card {
+            position: relative;
+            left: auto;
+            top: auto;
+            width: 100%;
+            max-width: 16rem;
+            margin: 0 auto;
+            order: -1;
+        }
+
+        .guestbook-form-row {
+            grid-template-columns: 1fr;
+        }
+
+        .guestbook-composer {
+            padding: 1rem;
+        }
+
+        .guestbook-composer-dialog {
+            width: 100%;
+        }
+
+        .guestbook-lightbox {
+            padding: 1rem;
+        }
+
+        .guestbook-lightbox-dialog {
+            width: 100%;
+        }
+    }
+</style>
+
+<div class="guestbook-shell">
+    <h1 class="sr-only"><%- boardTitle %></h1>
+
+    <nav class="guestbook-dock glass-card" aria-label="Guestbook navigation">
+        <a href="<%- resolveUrl(homeMenu.url || '/') %>" class="dock-avatar" aria-label="Home">
+            <img src="<%- theme.avatar || '/images/avatar-cat.svg' %>" alt="avatar">
+        </a>
+        <% dockLinks.forEach((item) => { %>
+            <a
+                href="<%- resolveUrl(item.url) %>"
+                class="dock-link <%= item.active ? 'is-active' : '' %>"
+                aria-label="<%- item.label %>"
+                title="<%- item.label %>"
+            >
+                <i class="<%- item.icon %>"></i>
+            </a>
+        <% }) %>
+    </nav>
+
+    <section class="guestbook-status glass-card" aria-label="Guestbook information">
+        <strong><%- boardTitle %></strong>
+        <span><%- boardSubtitle %></span>
+        <small id="guestbook-count"><%- `${noteItems.length} ${boardCountLabel}` %></small>
+    </section>
+
+    <main class="guestbook-board" aria-label="<%- boardNote %>">
+        <article
+            class="composer-note-card"
+            style="--composer-left: <%- composerCard.x %>%; --composer-top: <%- composerCard.y %>%; --composer-width: <%- composerCard.width %>px; --composer-rotate: <%- composerCard.rotate %>deg; --composer-base: <%- composerToneStyle.base %>; --composer-deep: <%- composerToneStyle.deep %>; --composer-fold: <%- composerToneStyle.fold %>; --composer-shadow: <%- composerToneStyle.shadow %>;"
+        >
+            <section class="composer-note-paper">
+                <div class="composer-note-head">
+                    <strong class="composer-note-title"><%- composerCard.title %></strong>
+                    <span class="composer-note-badge"><i class="fa-solid fa-pen-to-square"></i></span>
+                </div>
+                <p class="composer-note-copy"><%- composerCard.subtitle %></p>
+                <div class="composer-note-foot">
+                    <span>Visitor entry</span>
+                    <button class="composer-note-button" type="button" id="open-guestbook-composer"><%- composerCard.button %></button>
+                </div>
+            </section>
+        </article>
+
+        <% noteItems.forEach((item) => { %>
+            <article
+                class="sticky-note-card"
+                data-author="<%- item.author %>"
+                data-date="<%- item.date %>"
+                data-message="<%- item.message %>"
+                data-tone="<%- item.tone %>"
+                style="--note-left: <%- item.x %>%; --note-top: <%- item.y %>%; --note-width: <%- item.width %>px; --note-rotate: <%- item.rotate %>deg; --note-delay: <%- item.delay %>; --note-base: <%- item.toneStyle.base %>; --note-deep: <%- item.toneStyle.deep %>; --note-fold: <%- item.toneStyle.fold %>; --note-shadow: <%- item.toneStyle.shadow %>;"
+            >
+                <section class="sticky-note-paper">
+                    <div class="sticky-note-head">
+                        <strong class="sticky-note-author"><%- item.author %></strong>
+                        <span class="sticky-note-badge"><i class="fa-solid fa-pencil"></i></span>
+                    </div>
+                    <p class="sticky-note-message"><%- item.message %></p>
+                    <div class="sticky-note-foot">
+                        <span><%- item.date %></span>
+                        <span class="sticky-note-hint">double tap</span>
+                    </div>
+                </section>
+            </article>
+        <% }) %>
+    </main>
+
+    <div class="guestbook-lightbox" aria-hidden="true">
+        <div class="guestbook-lightbox-dialog">
+            <button class="guestbook-lightbox-close" type="button" aria-label="Close note">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <article class="guestbook-lightbox-paper" style="--note-base: #fff3a8; --note-deep: #f9e485; --note-fold: #efd05f;">
+                <div class="guestbook-lightbox-head">
+                    <strong class="guestbook-lightbox-author"></strong>
+                    <span class="guestbook-lightbox-meta"></span>
+                </div>
+                <div class="guestbook-lightbox-message"></div>
+                <div class="guestbook-lightbox-foot">
+                    <span class="guestbook-lightbox-label">Guestbook Note</span>
+                    <span>double click to close</span>
+                </div>
+            </article>
+        </div>
+    </div>
+
+    <div class="guestbook-composer" aria-hidden="true">
+        <section class="guestbook-composer-dialog glass-card" aria-label="Write a guestbook note">
+            <div class="guestbook-composer-head">
+                <div>
+                    <strong>Write A Note</strong>
+                    <span>Leave a little message for the next visitor.</span>
+                </div>
+                <button class="guestbook-composer-close" type="button" aria-label="Close composer">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <form class="guestbook-form" id="guestbook-form">
+                <div class="guestbook-form-row">
+                    <div class="guestbook-field">
+                        <label for="guestbook-author">Your Name</label>
+                        <input class="guestbook-input" id="guestbook-author" name="author" maxlength="20" placeholder="e.g. SukiAme" required>
+                    </div>
+                    <div class="guestbook-field">
+                        <label for="guestbook-tone">Note Color</label>
+                        <select class="guestbook-select" id="guestbook-tone" name="tone">
+                            <option value="yellow">Sunny Yellow</option>
+                            <option value="pink">Soft Pink</option>
+                            <option value="blue">Sky Blue</option>
+                            <option value="green">Mint Green</option>
+                            <option value="lavender">Lavender</option>
+                            <option value="peach">Peach</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="guestbook-field">
+                    <label for="guestbook-message">Message</label>
+                    <textarea class="guestbook-textarea" id="guestbook-message" name="message" maxlength="180" placeholder="Write something kind, warm, or memorable..." required></textarea>
+                </div>
+                <div class="guestbook-form-foot">
+                    <span class="guestbook-form-hint">Your note will be saved in this browser. Shared syncing can come next.</span>
+                    <button class="guestbook-submit" type="submit">Post This Note</button>
+                </div>
+            </form>
+        </section>
+    </div>
+</div>
+
+<script>
+    (() => {
+        const board = document.querySelector('.guestbook-board');
+        if (!board) return;
+
+        const cards = Array.from(board.querySelectorAll('.sticky-note-card'));
+        if (!cards.length) return;
+
+        const lightbox = document.querySelector('.guestbook-lightbox');
+        const lightboxPaper = lightbox ? lightbox.querySelector('.guestbook-lightbox-paper') : null;
+        const lightboxAuthor = lightbox ? lightbox.querySelector('.guestbook-lightbox-author') : null;
+        const lightboxMeta = lightbox ? lightbox.querySelector('.guestbook-lightbox-meta') : null;
+        const lightboxMessage = lightbox ? lightbox.querySelector('.guestbook-lightbox-message') : null;
+        const lightboxClose = lightbox ? lightbox.querySelector('.guestbook-lightbox-close') : null;
+        const composer = document.querySelector('.guestbook-composer');
+        const composerOpen = document.getElementById('open-guestbook-composer');
+        const composerClose = composer ? composer.querySelector('.guestbook-composer-close') : null;
+        const composerForm = document.getElementById('guestbook-form');
+        const countEl = document.getElementById('guestbook-count');
+        const storageKey = 'sukiame:guestbook:user-notes:v1';
+        const canUseStorage = (() => {
+            try {
+                const probeKey = `${storageKey}:probe`;
+                window.localStorage.setItem(probeKey, '1');
+                window.localStorage.removeItem(probeKey);
+                return true;
+            } catch (error) {
+                return false;
+            }
+        })();
+
+        const tonePalette = {
+            yellow: { base: '#fff3a8', deep: '#f9e485', fold: '#efd05f', shadow: 'rgba(236, 201, 84, 0.28)' },
+            pink: { base: '#ffd8df', deep: '#ffc5d0', fold: '#f2aebf', shadow: 'rgba(241, 171, 194, 0.28)' },
+            blue: { base: '#d2eaff', deep: '#b9dcfb', fold: '#9dcaef', shadow: 'rgba(117, 174, 226, 0.28)' },
+            green: { base: '#daf3d5', deep: '#c9ebc2', fold: '#aed8a6', shadow: 'rgba(130, 193, 127, 0.28)' },
+            lavender: { base: '#e7ddff', deep: '#d8cbfb', fold: '#bba8ee', shadow: 'rgba(168, 146, 231, 0.28)' },
+            peach: { base: '#ffe4cb', deep: '#ffd6b3', fold: '#f3c18f', shadow: 'rgba(237, 171, 118, 0.28)' }
+        };
+
+        let activeState = null;
+        let topLayer = cards.length + 2;
+        let lastTap = { card: null, time: 0 };
+
+        const updateCount = () => {
+            if (!countEl) return;
+            countEl.textContent = `${board.querySelectorAll('.sticky-note-card').length} <%- boardCountLabel %>`;
+        };
+
+        const readStoredNotes = () => {
+            if (!canUseStorage) return [];
+
+            try {
+                const raw = window.localStorage.getItem(storageKey);
+                if (!raw) return [];
+                const parsed = JSON.parse(raw);
+                return Array.isArray(parsed) ? parsed : [];
+            } catch (error) {
+                return [];
+            }
+        };
+
+        const persistUserNotes = () => {
+            if (!canUseStorage) return;
+
+            const notes = Array.from(board.querySelectorAll('.sticky-note-card[data-user-note="true"]')).map((card) => ({
+                id: card.dataset.noteId || '',
+                author: card.dataset.author || '',
+                date: card.dataset.date || '',
+                message: card.dataset.message || '',
+                tone: card.dataset.tone || 'yellow',
+                left: card.style.getPropertyValue('--note-left') || '',
+                top: card.style.getPropertyValue('--note-top') || '',
+                width: card.style.getPropertyValue('--note-width') || '',
+                rotate: card.style.getPropertyValue('--note-rotate') || '',
+                dx: Number(card.dataset.dx || 0),
+                dy: Number(card.dataset.dy || 0)
+            }));
+
+            try {
+                window.localStorage.setItem(storageKey, JSON.stringify(notes));
+            } catch (error) {
+                /* noop */
+            }
+        };
+
+        const escapeHtml = (value) => String(value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+
+        const applyOffset = (card, dx, dy) => {
+            card.dataset.dx = String(dx);
+            card.dataset.dy = String(dy);
+            card.style.setProperty('--note-dx', `${dx}px`);
+            card.style.setProperty('--note-dy', `${dy}px`);
+        };
+
+        const openComposer = () => {
+            if (!composer) return;
+            composer.classList.add('is-open');
+            composer.setAttribute('aria-hidden', 'false');
+            document.body.classList.add('guestbook-composer-open');
+        };
+
+        const closeComposer = () => {
+            if (!composer || !composer.classList.contains('is-open')) return;
+            composer.classList.remove('is-open');
+            composer.setAttribute('aria-hidden', 'true');
+            document.body.classList.remove('guestbook-composer-open');
+        };
+
+        const openLightbox = (card) => {
+            if (!lightbox || !lightboxPaper) return;
+
+            const tone = tonePalette[card.dataset.tone] || tonePalette.yellow;
+            lightboxPaper.style.setProperty('--note-base', tone.base);
+            lightboxPaper.style.setProperty('--note-deep', tone.deep);
+            lightboxPaper.style.setProperty('--note-fold', tone.fold);
+
+            if (lightboxAuthor) lightboxAuthor.textContent = card.dataset.author || '';
+            if (lightboxMeta) lightboxMeta.textContent = card.dataset.date || '';
+            if (lightboxMessage) lightboxMessage.textContent = card.dataset.message || '';
+
+            lightbox.classList.add('is-open');
+            lightbox.setAttribute('aria-hidden', 'false');
+            document.body.classList.add('guestbook-lightbox-open');
+        };
+
+        const closeLightbox = () => {
+            if (!lightbox || !lightbox.classList.contains('is-open')) return;
+
+            lightbox.classList.remove('is-open');
+            lightbox.setAttribute('aria-hidden', 'true');
+            document.body.classList.remove('guestbook-lightbox-open');
+        };
+
+        const registerCard = (card, indexHint) => {
+            applyOffset(card, Number(card.dataset.dx || 0), Number(card.dataset.dy || 0));
+            card.style.zIndex = String(indexHint || ++topLayer);
+
+            card.addEventListener('dragstart', (event) => {
+                event.preventDefault();
+            });
+
+            card.addEventListener('pointerdown', (event) => {
+                if (event.pointerType === 'mouse' && event.button !== 0) return;
+
+                activeState = {
+                    card,
+                    pointerId: event.pointerId,
+                    pointerType: event.pointerType,
+                    startX: event.clientX,
+                    startY: event.clientY,
+                    startDx: parseFloat(card.dataset.dx || '0'),
+                    startDy: parseFloat(card.dataset.dy || '0'),
+                    moved: false
+                };
+
+                topLayer += 1;
+                card.style.zIndex = String(topLayer);
+                card.classList.add('is-dragging');
+
+                if (card.setPointerCapture) {
+                    card.setPointerCapture(event.pointerId);
+                }
+
+                event.preventDefault();
+            });
+
+            card.addEventListener('dblclick', (event) => {
+                event.preventDefault();
+                openLightbox(card);
+            });
+        };
+
+        cards.forEach((card, index) => {
+            registerCard(card, index + 1);
+        });
+
+        const createNoteCard = (payload, options = {}) => {
+            const {
+                id,
+                author,
+                date,
+                message,
+                tone,
+                left,
+                top,
+                width,
+                rotate,
+                dx = 0,
+                dy = 0
+            } = payload;
+            const { persist = true } = options;
+            const toneStyle = tonePalette[tone] || tonePalette.yellow;
+            const safeAuthor = escapeHtml(author);
+            const safeMessage = escapeHtml(message);
+            const card = document.createElement('article');
+            const boardWidth = board.clientWidth || 1200;
+            const boardHeight = board.clientHeight || 900;
+            const computedWidth = Math.max(198, Math.min(220, Math.round(boardWidth * 0.18)));
+            const noteWidth = typeof width === 'number' ? width : parseInt(width || `${computedWidth}`, 10) || computedWidth;
+            const maxX = Math.max(32, boardWidth - noteWidth - 32);
+            const maxY = Math.max(120, boardHeight - 240);
+            const randomX = Math.round(24 + Math.random() * maxX);
+            const randomY = Math.round(110 + Math.random() * maxY);
+            const randomRotate = Math.round((Math.random() * 18) - 9);
+            const today = new Date();
+            const displayDate = date || `${today.getFullYear()}.${String(today.getMonth() + 1).padStart(2, '0')}.${String(today.getDate()).padStart(2, '0')}`;
+            const leftValue = left || `${randomX}px`;
+            const topValue = top || `${randomY}px`;
+            const rotateValue = typeof rotate === 'number'
+                ? `${rotate}deg`
+                : (rotate || `${randomRotate}deg`);
+            const noteId = id || `guest-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
+            card.className = 'sticky-note-card';
+            card.dataset.userNote = 'true';
+            card.dataset.noteId = noteId;
+            card.dataset.author = author;
+            card.dataset.date = displayDate;
+            card.dataset.message = message;
+            card.dataset.tone = tone;
+            card.dataset.dx = String(Number(dx || 0));
+            card.dataset.dy = String(Number(dy || 0));
+            card.style.setProperty('--note-left', leftValue);
+            card.style.setProperty('--note-top', topValue);
+            card.style.setProperty('--note-width', `${noteWidth}px`);
+            card.style.setProperty('--note-rotate', rotateValue);
+            card.style.setProperty('--note-delay', '0');
+            card.style.setProperty('--note-base', toneStyle.base);
+            card.style.setProperty('--note-deep', toneStyle.deep);
+            card.style.setProperty('--note-fold', toneStyle.fold);
+            card.style.setProperty('--note-shadow', toneStyle.shadow);
+            card.innerHTML = `
+                <section class="sticky-note-paper">
+                    <div class="sticky-note-head">
+                        <strong class="sticky-note-author">${safeAuthor}</strong>
+                        <span class="sticky-note-badge"><i class="fa-solid fa-pencil"></i></span>
+                    </div>
+                    <p class="sticky-note-message">${safeMessage}</p>
+                    <div class="sticky-note-foot">
+                        <span>${displayDate}</span>
+                        <span class="sticky-note-hint">double tap</span>
+                    </div>
+                </section>
+            `;
+
+            board.appendChild(card);
+            registerCard(card);
+            if (dx || dy) {
+                applyOffset(card, Number(dx || 0), Number(dy || 0));
+            }
+            updateCount();
+            if (persist) {
+                persistUserNotes();
+            }
+            return card;
+        };
+
+        const handleMove = (event) => {
+            if (!activeState || activeState.pointerId !== event.pointerId) return;
+
+            const dx = activeState.startDx + (event.clientX - activeState.startX);
+            const dy = activeState.startDy + (event.clientY - activeState.startY);
+
+            if (Math.abs(dx - activeState.startDx) > 6 || Math.abs(dy - activeState.startDy) > 6) {
+                activeState.moved = true;
+            }
+
+            applyOffset(activeState.card, dx, dy);
+        };
+
+        const finishDrag = (event) => {
+            if (!activeState || (event && activeState.pointerId !== event.pointerId)) return;
+
+            const { card, pointerId, pointerType, moved } = activeState;
+            card.classList.remove('is-dragging');
+
+            if (card.releasePointerCapture) {
+                try {
+                    card.releasePointerCapture(pointerId);
+                } catch (error) {
+                    /* noop */
+                }
+            }
+
+            if (!moved && pointerType !== 'mouse') {
+                const now = Date.now();
+                if (lastTap.card === card && now - lastTap.time < 320) {
+                    openLightbox(card);
+                    lastTap = { card: null, time: 0 };
+                } else {
+                    lastTap = { card, time: now };
+                }
+            }
+
+            if (card.dataset.userNote === 'true') {
+                persistUserNotes();
+            }
+
+            activeState = null;
+        };
+
+        if (lightbox) {
+            lightbox.addEventListener('click', (event) => {
+                if (event.target === lightbox || event.target === lightboxClose) {
+                    closeLightbox();
+                }
+            });
+
+            lightbox.addEventListener('dblclick', closeLightbox);
+        }
+
+        if (lightboxClose) {
+            lightboxClose.addEventListener('click', closeLightbox);
+        }
+
+        if (composerOpen) {
+            composerOpen.addEventListener('click', openComposer);
+        }
+
+        if (composer) {
+            composer.addEventListener('click', (event) => {
+                if (event.target === composer) {
+                    closeComposer();
+                }
+            });
+        }
+
+        if (composerClose) {
+            composerClose.addEventListener('click', closeComposer);
+        }
+
+        if (composerForm) {
+            composerForm.addEventListener('submit', (event) => {
+                event.preventDefault();
+
+                const formData = new FormData(composerForm);
+                const author = String(formData.get('author') || '').trim();
+                const message = String(formData.get('message') || '').trim();
+                const tone = String(formData.get('tone') || 'yellow');
+
+                if (!author || !message) return;
+
+                createNoteCard({ author, message, tone });
+                composerForm.reset();
+                closeComposer();
+            });
+        }
+
+        readStoredNotes().forEach((item) => {
+            createNoteCard(item, { persist: false });
+        });
+
+        window.addEventListener('pointermove', handleMove);
+        window.addEventListener('pointerup', finishDrag);
+        window.addEventListener('pointercancel', finishDrag);
+        window.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
+                closeLightbox();
+                closeComposer();
+            }
+        });
+
+        updateCount();
+    })();
+</script>

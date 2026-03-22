@@ -2,8 +2,7 @@
   || 'sukiame' ; const heroLine=config.description || 'The only way to do great is to love what you do.' ; const
   heroSource=config.description_source || '' ; const menuEntries=[ { key: 'Home' , fallbackLabel: 'Home' ,
   fallbackUrl: '/' , fallbackIcon: 'fa-solid fa-house' , active: true }, { key: 'Archives' , fallbackLabel: 'Blog' ,
-  fallbackUrl: '/archives/' , fallbackIcon: 'fa-solid fa-feather-pointed' }, { key: 'Projects' ,
-  fallbackLabel: 'Projects' , fallbackUrl: '#' , fallbackIcon: 'fa-solid fa-box-open' }, { key: 'Guestbook' ,
+  fallbackUrl: '/archives/' , fallbackIcon: 'fa-solid fa-feather-pointed' }, { key: 'Guestbook' ,
   fallbackLabel: 'Guestbook' , fallbackUrl: '#' , fallbackIcon: 'fa-solid fa-message' } ].map((item)=> {
   const menuItem = theme.menu && theme.menu[item.key] ? theme.menu[item.key] : {};
   const normalized = typeof menuItem === 'string' ? { url: menuItem } : menuItem;
@@ -39,7 +38,7 @@
 
   const photoWallConfig = theme.photo_wall || {};
   const photoWallTitle = photoWallConfig.title || '照片墙';
-  const photoWallSubtitle = photoWallConfig.subtitle || ' ';
+  const photoWallSubtitle = photoWallConfig.subtitle || 'Life Moments';
   const photoWallIcon = photoWallConfig.icon || 'fa-solid fa-image';
   const photoWallUrl = photoWallConfig.url || '#';
   const photoWallHref = /^(?:[a-z][a-z0-9+.-]*:)?\/\//i.test(photoWallUrl) || /^(#|mailto:|tel:)/i.test(photoWallUrl)

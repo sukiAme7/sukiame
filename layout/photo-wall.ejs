@@ -1,0 +1,677 @@
+<%
+const photoWallConfig = theme.photo_wall || {};
+const wallTitle = photoWallConfig.page_title || photoWallConfig.title || page.title || 'Photo Wall';
+const wallSubtitle = photoWallConfig.page_subtitle || photoWallConfig.subtitle || 'Life Moments';
+const wallIcon = photoWallConfig.icon || 'fa-solid fa-image';
+const wallNote = photoWallConfig.note || 'Scattered little frames from ordinary days.';
+const wallCountLabel = photoWallConfig.count_label || 'Frames';
+
+const resolveUrl = (value) => {
+  const link = value || '#';
+  return /^(?:[a-z][a-z0-9+.-]*:)?\/\//i.test(link) || /^(#|mailto:|tel:)/i.test(link)
+    ? link
+    : url_for(link);
+};
+
+const getEntry = (group, key) => {
+  const source = group && group[key] ? group[key] : {};
+  return typeof source === 'string' ? { url: source } : source;
+};
+
+const homeMenu = getEntry(theme.menu, 'Home');
+const archiveMenu = getEntry(theme.menu, 'Archives');
+const guestbookMenu = getEntry(theme.menu, 'Guestbook');
+
+const dockLinks = [
+  {
+    label: homeMenu.label || 'Home',
+    url: homeMenu.url || '/',
+    icon: homeMenu.icon || 'fa-solid fa-house'
+  },
+  {
+    label: archiveMenu.label || 'Blog',
+    url: archiveMenu.url || '/archives/',
+    icon: archiveMenu.icon || 'fa-solid fa-feather-pointed'
+  },
+  {
+    label: wallTitle,
+    url: photoWallConfig.url || '/photo-wall/',
+    icon: wallIcon,
+    active: true
+  },
+  guestbookMenu.url && guestbookMenu.url !== '#'
+    ? {
+        label: guestbookMenu.label || 'Guestbook',
+        url: guestbookMenu.url,
+        icon: guestbookMenu.icon || 'fa-solid fa-message'
+      }
+    : null
+].filter(Boolean);
+
+const defaultItems = [
+  { title: 'Snow Trail', image: 'https://picsum.photos/seed/suki-wall-01/900/620', x: 8, y: 15, width: 188, rotate: -13, aspect: '16 / 10', delay: 0 },
+  { title: 'Blue Notes', image: 'https://picsum.photos/seed/suki-wall-02/760/820', x: 31, y: 17, width: 150, rotate: -2, aspect: '1 / 1.08', delay: 1 },
+  { title: 'Forest Story', image: 'https://picsum.photos/seed/suki-wall-03/900/580', x: 53, y: 12, width: 188, rotate: -17, aspect: '16 / 10', delay: 2 },
+  { title: 'Sky Spark', image: 'https://picsum.photos/seed/suki-wall-04/900/580', x: 74, y: 16, width: 176, rotate: 11, aspect: '16 / 10', delay: 3 },
+  { title: 'Quiet Snow', image: 'https://picsum.photos/seed/suki-wall-05/780/780', x: 16, y: 43, width: 162, rotate: 14, aspect: '1 / 1', delay: 4 },
+  { title: 'Green Light', image: 'https://picsum.photos/seed/suki-wall-06/900/560', x: 38, y: 40, width: 164, rotate: -1, aspect: '16 / 10', delay: 5 },
+  { title: 'Crystal Blue', image: 'https://picsum.photos/seed/suki-wall-07/900/620', x: 55, y: 38, width: 164, rotate: -18, aspect: '16 / 10', delay: 6 },
+  { title: 'Window Page', image: 'https://picsum.photos/seed/suki-wall-08/760/860', x: 80, y: 36, width: 150, rotate: 15, aspect: '1 / 1.08', delay: 7 },
+  { title: 'Umbrella Rain', image: 'https://picsum.photos/seed/suki-wall-09/900/620', x: 30, y: 67, width: 166, rotate: 12, aspect: '16 / 10', delay: 8 },
+  { title: 'Soft Portrait', image: 'https://picsum.photos/seed/suki-wall-10/900/620', x: 53, y: 69, width: 170, rotate: 18, aspect: '16 / 10', delay: 9 },
+  { title: 'Paper Note', image: 'https://picsum.photos/seed/suki-wall-11/760/860', x: 72, y: 69, width: 146, rotate: -10, aspect: '1 / 1.08', delay: 10 },
+  { title: 'Pink Frame', image: 'https://picsum.photos/seed/suki-wall-12/760/860', x: 86, y: 74, width: 150, rotate: 9, aspect: '1 / 1.08', delay: 11 }
+];
+
+const rawItems = Array.isArray(photoWallConfig.items) && photoWallConfig.items.length
+  ? photoWallConfig.items
+  : defaultItems;
+
+const wallItems = rawItems.map((item, index) => ({
+  title: item.title || `Frame ${index + 1}`,
+  image: item.image || '',
+  x: typeof item.x === 'number' ? item.x : 10 + (index % 4) * 20,
+  y: typeof item.y === 'number' ? item.y : 18 + Math.floor(index / 4) * 22,
+  width: typeof item.width === 'number' ? item.width : 168,
+  rotate: typeof item.rotate === 'number' ? item.rotate : 0,
+  aspect: item.aspect || '4 / 3',
+  delay: typeof item.delay === 'number' ? item.delay : index
+}));
+%>
+
+<style>
+    .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+    }
+
+    .photo-wall-shell {
+        position: relative;
+        min-height: 100vh;
+        padding: 1rem;
+        overflow: hidden;
+    }
+
+    .photo-wall-shell::before,
+    .photo-wall-shell::after {
+        content: "";
+        position: absolute;
+        inset: -12%;
+        pointer-events: none;
+    }
+
+    .photo-wall-shell::before {
+        background:
+            radial-gradient(circle at 14% 16%, rgba(255, 255, 255, 0.65), rgba(255, 255, 255, 0) 22%),
+            radial-gradient(circle at 12% 85%, rgba(253, 224, 71, 0.22), rgba(253, 224, 71, 0) 18%),
+            radial-gradient(circle at 30% 88%, rgba(125, 211, 252, 0.24), rgba(125, 211, 252, 0) 20%),
+            radial-gradient(circle at 60% 84%, rgba(134, 239, 172, 0.26), rgba(134, 239, 172, 0) 18%),
+            radial-gradient(circle at 85% 78%, rgba(196, 181, 253, 0.2), rgba(196, 181, 253, 0) 22%);
+        filter: blur(18px);
+        opacity: 0.95;
+    }
+
+    .photo-wall-shell::after {
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0.08));
+    }
+
+    .photo-wall-dock,
+    .photo-wall-status {
+        position: absolute;
+        z-index: 20;
+    }
+
+    .photo-wall-dock {
+        top: 1rem;
+        left: 1rem;
+        padding: 0.6rem 0.75rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.55rem;
+    }
+
+    .photo-wall-status {
+        top: 1rem;
+        right: 1rem;
+        padding: 0.75rem 0.95rem;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.16rem;
+        min-width: 12rem;
+    }
+
+    .photo-wall-status strong {
+        font-size: 0.98rem;
+        color: #1e293b;
+        font-weight: 800;
+    }
+
+    .photo-wall-status span {
+        font-size: 0.76rem;
+        color: #64748b;
+        font-weight: 700;
+    }
+
+    .photo-wall-status small {
+        font-size: 0.72rem;
+        color: #94a3b8;
+        font-weight: 700;
+    }
+
+    .dock-avatar,
+    .dock-link {
+        width: 2.35rem;
+        height: 2.35rem;
+        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255, 255, 255, 0.66);
+        color: #64748b;
+        box-shadow: 0 6px 18px rgba(148, 163, 184, 0.12);
+        transition: transform 0.25s ease, background 0.25s ease, color 0.25s ease;
+    }
+
+    .dock-avatar img {
+        width: 1.8rem;
+        height: 1.8rem;
+        border-radius: 999px;
+        object-fit: cover;
+    }
+
+    .dock-link:hover,
+    .dock-avatar:hover {
+        transform: translateY(-2px);
+        background: rgba(255, 255, 255, 0.82);
+    }
+
+    .dock-link.is-active {
+        background: rgba(255, 255, 255, 0.84);
+        color: #38bdf8;
+    }
+
+    .photo-wall-board {
+        position: relative;
+        min-height: calc(100vh - 2rem);
+        padding-top: 5rem;
+        z-index: 1;
+    }
+
+    .polaroid-card {
+        position: absolute;
+        left: var(--photo-left);
+        top: var(--photo-top);
+        width: var(--photo-width);
+        transform: translate(var(--photo-dx, 0px), var(--photo-dy, 0px));
+        transform-origin: center center;
+        display: block;
+        animation: photoWallReveal 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+        animation-delay: calc(var(--photo-delay) * 90ms);
+        transition: transform 0.28s ease;
+        cursor: grab;
+        touch-action: none;
+        user-select: none;
+        -webkit-user-select: none;
+        will-change: transform;
+    }
+
+    .polaroid-card:hover {
+        z-index: 3;
+    }
+
+    .polaroid-card.is-dragging {
+        cursor: grabbing;
+        transition: none;
+        z-index: 40;
+    }
+
+    .polaroid-frame {
+        display: block;
+        padding: 0.42rem 0.42rem 0.92rem;
+        background: #fff;
+        border-radius: 0.3rem;
+        box-shadow: 0 18px 38px rgba(148, 163, 184, 0.2);
+        transform: rotate(var(--photo-rotate));
+        transform-origin: center center;
+        transition: transform 0.28s ease, box-shadow 0.28s ease, filter 0.28s ease;
+    }
+
+    .polaroid-card:hover .polaroid-frame {
+        transform: rotate(var(--photo-rotate)) translateY(-10px) scale(1.03);
+        box-shadow: 0 24px 46px rgba(148, 163, 184, 0.24);
+        filter: saturate(1.03);
+    }
+
+    .polaroid-card.is-dragging .polaroid-frame {
+        transform: rotate(var(--photo-rotate)) scale(1.04);
+        box-shadow: 0 28px 52px rgba(148, 163, 184, 0.28);
+    }
+
+    .polaroid-media {
+        display: block;
+        aspect-ratio: var(--photo-aspect);
+        overflow: hidden;
+        border-radius: 0.12rem;
+        background:
+            linear-gradient(135deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0)),
+            linear-gradient(135deg, #bae6fd, #d9f99d);
+    }
+
+    .polaroid-media img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+
+    .polaroid-fallback {
+        width: 100%;
+        height: 100%;
+        min-height: 8rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+        text-align: center;
+        color: rgba(255, 255, 255, 0.92);
+        font-size: 0.95rem;
+        font-weight: 800;
+    }
+
+    body.photo-wall-lightbox-open {
+        overflow: hidden;
+    }
+
+    .photo-wall-lightbox {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+        background: rgba(15, 23, 42, 0.45);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        transition: opacity 0.24s ease, visibility 0.24s ease;
+        z-index: 120;
+    }
+
+    .photo-wall-lightbox.is-open {
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+    }
+
+    .photo-wall-lightbox-frame {
+        margin: 0;
+        width: min(78vw, 56rem);
+        max-height: calc(100vh - 4rem);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.9rem;
+    }
+
+    .photo-wall-lightbox-media {
+        width: 100%;
+        max-height: calc(100vh - 8rem);
+        object-fit: contain;
+        border-radius: 1rem;
+        background: rgba(255, 255, 255, 0.92);
+        box-shadow: 0 30px 80px rgba(15, 23, 42, 0.24);
+    }
+
+    .photo-wall-lightbox-caption {
+        min-height: 1.25rem;
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: rgba(255, 255, 255, 0.92);
+        letter-spacing: 0.01em;
+        text-align: center;
+    }
+
+    .photo-wall-lightbox-close {
+        position: absolute;
+        top: 1.2rem;
+        right: 1.2rem;
+        width: 2.75rem;
+        height: 2.75rem;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.18);
+        color: #fff;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 12px 30px rgba(15, 23, 42, 0.16);
+        transition: background 0.2s ease, transform 0.2s ease;
+    }
+
+    .photo-wall-lightbox-close:hover {
+        background: rgba(255, 255, 255, 0.28);
+        transform: translateY(-2px);
+    }
+
+    @keyframes photoWallReveal {
+        from {
+            opacity: 0;
+            transform: translate(var(--photo-dx, 0px), calc(var(--photo-dy, 0px) + 18px)) scale(0.94);
+        }
+
+        to {
+            opacity: 1;
+            transform: translate(var(--photo-dx, 0px), var(--photo-dy, 0px));
+        }
+    }
+
+    @media (max-width: 1024px) {
+        .photo-wall-status {
+            min-width: auto;
+        }
+
+        .photo-wall-board {
+            min-height: 74rem;
+        }
+    }
+
+    @media (max-width: 900px) {
+        .photo-wall-shell {
+            padding: 1rem;
+        }
+
+        .photo-wall-dock,
+        .photo-wall-status {
+            position: relative;
+            top: auto;
+            left: auto;
+            right: auto;
+            margin-bottom: 0.85rem;
+        }
+
+        .photo-wall-dock {
+            width: fit-content;
+        }
+
+        .photo-wall-status {
+            display: inline-flex;
+        }
+
+        .photo-wall-board {
+            min-height: auto;
+            padding-top: 0.5rem;
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 1.2rem;
+            align-items: start;
+        }
+
+        .polaroid-card {
+            position: relative;
+            left: auto;
+            top: auto;
+            width: 100%;
+            max-width: 16rem;
+            margin: 0 auto;
+        }
+    }
+
+    @media (max-width: 640px) {
+        .photo-wall-dock {
+            width: 100%;
+            justify-content: space-between;
+            gap: 0.4rem;
+        }
+
+        .dock-avatar,
+        .dock-link {
+            width: 2.1rem;
+            height: 2.1rem;
+        }
+
+        .photo-wall-status {
+            width: 100%;
+        }
+
+        .photo-wall-board {
+            grid-template-columns: 1fr;
+        }
+
+        .photo-wall-lightbox {
+            padding: 1rem;
+        }
+
+        .photo-wall-lightbox-frame {
+            width: min(100%, 30rem);
+        }
+
+        .photo-wall-lightbox-close {
+            top: 0.9rem;
+            right: 0.9rem;
+        }
+    }
+</style>
+
+<div class="photo-wall-shell">
+    <h1 class="sr-only"><%- wallTitle %></h1>
+
+    <nav class="photo-wall-dock glass-card" aria-label="Photo wall navigation">
+        <a href="<%- resolveUrl(homeMenu.url || '/') %>" class="dock-avatar" aria-label="Home">
+            <img src="<%- theme.avatar || '/images/avatar-cat.svg' %>" alt="avatar">
+        </a>
+        <% dockLinks.forEach((item) => { %>
+            <a
+                href="<%- resolveUrl(item.url) %>"
+                class="dock-link <%= item.active ? 'is-active' : '' %>"
+                aria-label="<%- item.label %>"
+                title="<%- item.label %>"
+            >
+                <i class="<%- item.icon %>"></i>
+            </a>
+        <% }) %>
+    </nav>
+
+    <section class="photo-wall-status glass-card" aria-label="Photo wall information">
+        <strong><%- wallTitle %></strong>
+        <span><%- wallSubtitle %></span>
+        <small><%- `${wallItems.length} ${wallCountLabel}` %></small>
+    </section>
+
+    <main class="photo-wall-board" aria-label="<%- wallNote %>">
+        <% wallItems.forEach((item) => { %>
+            <article
+                class="polaroid-card"
+                style="--photo-left: <%- item.x %>%; --photo-top: <%- item.y %>%; --photo-width: <%- item.width %>px; --photo-rotate: <%- item.rotate %>deg; --photo-aspect: <%- item.aspect %>; --photo-delay: <%- item.delay %>;"
+            >
+                <span class="polaroid-frame">
+                    <span class="polaroid-media">
+                        <% if (item.image) { %>
+                            <img src="<%- item.image %>" alt="<%- item.title %>" loading="lazy">
+                        <% } else { %>
+                            <span class="polaroid-fallback"><%- item.title %></span>
+                        <% } %>
+                    </span>
+                </span>
+            </article>
+        <% }) %>
+    </main>
+
+    <div class="photo-wall-lightbox" aria-hidden="true">
+        <button class="photo-wall-lightbox-close" type="button" aria-label="Close preview">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+        <figure class="photo-wall-lightbox-frame">
+            <img class="photo-wall-lightbox-media" src="" alt="">
+            <figcaption class="photo-wall-lightbox-caption"></figcaption>
+        </figure>
+    </div>
+</div>
+
+<script>
+    (() => {
+        const board = document.querySelector('.photo-wall-board');
+        if (!board) return;
+
+        const cards = Array.from(board.querySelectorAll('.polaroid-card'));
+        if (!cards.length) return;
+        const lightbox = document.querySelector('.photo-wall-lightbox');
+        const lightboxImage = lightbox ? lightbox.querySelector('.photo-wall-lightbox-media') : null;
+        const lightboxCaption = lightbox ? lightbox.querySelector('.photo-wall-lightbox-caption') : null;
+        const lightboxClose = lightbox ? lightbox.querySelector('.photo-wall-lightbox-close') : null;
+
+        let activeState = null;
+        let topLayer = cards.length + 2;
+        let lastTap = { card: null, time: 0 };
+
+        const openLightbox = (card) => {
+            if (!lightbox || !lightboxImage) return;
+
+            const image = card.querySelector('img');
+            if (!image) return;
+
+            lightboxImage.src = image.currentSrc || image.src;
+            lightboxImage.alt = image.alt || '';
+
+            if (lightboxCaption) {
+                lightboxCaption.textContent = image.alt || '';
+            }
+
+            lightbox.classList.add('is-open');
+            lightbox.setAttribute('aria-hidden', 'false');
+            document.body.classList.add('photo-wall-lightbox-open');
+        };
+
+        const closeLightbox = () => {
+            if (!lightbox || !lightbox.classList.contains('is-open')) return;
+
+            lightbox.classList.remove('is-open');
+            lightbox.setAttribute('aria-hidden', 'true');
+            document.body.classList.remove('photo-wall-lightbox-open');
+
+            if (lightboxImage) {
+                lightboxImage.src = '';
+                lightboxImage.alt = '';
+            }
+
+            if (lightboxCaption) {
+                lightboxCaption.textContent = '';
+            }
+        };
+
+        const applyOffset = (card, dx, dy) => {
+            card.dataset.dx = String(dx);
+            card.dataset.dy = String(dy);
+            card.style.setProperty('--photo-dx', `${dx}px`);
+            card.style.setProperty('--photo-dy', `${dy}px`);
+        };
+
+        cards.forEach((card, index) => {
+            applyOffset(card, Number(card.dataset.dx || 0), Number(card.dataset.dy || 0));
+            card.style.zIndex = String(index + 1);
+
+            card.addEventListener('dragstart', (event) => {
+                event.preventDefault();
+            });
+
+            card.addEventListener('pointerdown', (event) => {
+                if (event.pointerType === 'mouse' && event.button !== 0) return;
+
+                activeState = {
+                    card,
+                    pointerId: event.pointerId,
+                    pointerType: event.pointerType,
+                    startX: event.clientX,
+                    startY: event.clientY,
+                    startDx: parseFloat(card.dataset.dx || '0'),
+                    startDy: parseFloat(card.dataset.dy || '0'),
+                    moved: false
+                };
+
+                topLayer += 1;
+                card.style.zIndex = String(topLayer);
+                card.classList.add('is-dragging');
+
+                if (card.setPointerCapture) {
+                    card.setPointerCapture(event.pointerId);
+                }
+
+                event.preventDefault();
+            });
+        });
+
+        const handleMove = (event) => {
+            if (!activeState || activeState.pointerId !== event.pointerId) return;
+
+            const dx = activeState.startDx + (event.clientX - activeState.startX);
+            const dy = activeState.startDy + (event.clientY - activeState.startY);
+            if (Math.abs(dx - activeState.startDx) > 6 || Math.abs(dy - activeState.startDy) > 6) {
+                activeState.moved = true;
+            }
+            applyOffset(activeState.card, dx, dy);
+        };
+
+        const finishDrag = (event) => {
+            if (!activeState || (event && activeState.pointerId !== event.pointerId)) return;
+
+            const { card, pointerId, pointerType, moved } = activeState;
+            card.classList.remove('is-dragging');
+
+            if (card.releasePointerCapture) {
+                try {
+                    card.releasePointerCapture(pointerId);
+                } catch (error) {
+                    /* noop */
+                }
+            }
+
+            if (!moved && pointerType !== 'mouse') {
+                const now = Date.now();
+                if (lastTap.card === card && now - lastTap.time < 320) {
+                    openLightbox(card);
+                    lastTap = { card: null, time: 0 };
+                } else {
+                    lastTap = { card, time: now };
+                }
+            }
+
+            activeState = null;
+        };
+
+        cards.forEach((card) => {
+            card.addEventListener('dblclick', (event) => {
+                event.preventDefault();
+                openLightbox(card);
+            });
+        });
+
+        if (lightbox) {
+            lightbox.addEventListener('click', (event) => {
+                if (event.target === lightbox || event.target === lightboxClose) {
+                    closeLightbox();
+                }
+            });
+        }
+
+        if (lightboxClose) {
+            lightboxClose.addEventListener('click', closeLightbox);
+        }
+
+        window.addEventListener('pointermove', handleMove);
+        window.addEventListener('pointerup', finishDrag);
+        window.addEventListener('pointercancel', finishDrag);
+        window.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
+                closeLightbox();
+            }
+        });
+    })();
+</script>
