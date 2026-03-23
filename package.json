@@ -11,6 +11,9 @@
     "glassmorphism",
     "bento"
   ],
+  "dependencies": {
+    "katex": "^0.16.22"
+  },
   "engines": {
     "hexo": "^8.0.0"
   }
