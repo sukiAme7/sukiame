@@ -107,11 +107,13 @@
   const colors = ['blue', 'green', 'purple'];
   return {
   title: post.title,
-  excerpt: post.excerpt
-  ? post.excerpt.replace(/<[^>]+>/g, '').trim()
-    : post.content
-    ? post.content.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim().slice(0, 34)
-      : fallbackPosts[index].excerpt,
+  excerpt: post.description
+  ? String(post.description).replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim()
+    : post.excerpt
+    ? post.excerpt.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim()
+      : post.content
+      ? post.content.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim().slice(0, 34)
+        : fallbackPosts[index].excerpt,
       date: post.date || new Date(),
       path: post.path || '#',
       cover: getCover(post),

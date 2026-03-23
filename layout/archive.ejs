@@ -13,7 +13,11 @@ const photoWallConfig = theme.photo_wall || {};
 const guestbookConfig = theme.guestbook || {};
 const resolveUrl = (value) => { const link = value || '#'; return /^(?:[a-z][a-z0-9+.-]*:)?\/\//i.test(link) || /^(#|mailto:|tel:)/i.test(link) ? link : url_for(link); };
 const getEntry = (group, key) => { const source = group && group[key] ? group[key] : {}; return typeof source === 'string' ? { url: source } : source; };
-const summarize = (post) => { const raw = post.excerpt ? post.excerpt : (post.content ? post.content.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim() : ''); return raw.replace(/<[^>]+>/g, '').trim().slice(0, 110) || 'No preview yet.'; };
+const toPlainText = (value) => String(value || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+const summarize = (post) => {
+  const raw = post.description || post.excerpt || (post.content ? toPlainText(post.content) : '');
+  return toPlainText(raw).slice(0, 110) || 'No preview yet.';
+};
 const getCover = (post) => { const photo = Array.isArray(post.photos) && post.photos.length ? post.photos[0] : ''; const raw = post.cover || post.thumbnail || post.banner || post.top_img || photo || ''; if (!raw) return ''; const value = typeof raw === 'string' ? raw : (raw.path || raw.url || ''); return value ? resolveUrl(value) : ''; };
 const homeMenu = getEntry(theme.menu, 'Home');
 const archiveMenu = getEntry(theme.menu, 'Archives');
