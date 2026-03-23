@@ -1009,7 +1009,7 @@ const composerToneStyle = tonePalette[composerCard.tone];
                     <textarea class="guestbook-textarea" id="guestbook-message" name="message" maxlength="180" placeholder="Write something kind, warm, or memorable..." required></textarea>
                 </div>
                 <div class="guestbook-form-foot">
-                    <span class="guestbook-form-hint">Your note will be saved in this browser. Shared syncing can come next.</span>
+                    <span class="guestbook-form-hint">New notes are published to the shared guestbook for every visitor to see.</span>
                     <button class="guestbook-submit" type="submit">Post This Note</button>
                 </div>
             </form>
@@ -1023,7 +1023,6 @@ const composerToneStyle = tonePalette[composerCard.tone];
         if (!board) return;
 
         const cards = Array.from(board.querySelectorAll('.sticky-note-card'));
-        if (!cards.length) return;
 
         const lightbox = document.querySelector('.guestbook-lightbox');
         const lightboxPaper = lightbox ? lightbox.querySelector('.guestbook-lightbox-paper') : null;
@@ -1036,17 +1035,7 @@ const composerToneStyle = tonePalette[composerCard.tone];
         const composerClose = composer ? composer.querySelector('.guestbook-composer-close') : null;
         const composerForm = document.getElementById('guestbook-form');
         const countEl = document.getElementById('guestbook-count');
-        const storageKey = 'sukiame:guestbook:user-notes:v1';
-        const canUseStorage = (() => {
-            try {
-                const probeKey = `${storageKey}:probe`;
-                window.localStorage.setItem(probeKey, '1');
-                window.localStorage.removeItem(probeKey);
-                return true;
-            } catch (error) {
-                return false;
-            }
-        })();
+        const notesEndpoint = '/api/guestbook/notes';
 
         const tonePalette = {
             yellow: { base: '#fff3a8', deep: '#f9e485', fold: '#efd05f', shadow: 'rgba(236, 201, 84, 0.28)' },
@@ -1064,43 +1053,6 @@ const composerToneStyle = tonePalette[composerCard.tone];
         const updateCount = () => {
             if (!countEl) return;
             countEl.textContent = `${board.querySelectorAll('.sticky-note-card').length} <%- boardCountLabel %>`;
-        };
-
-        const readStoredNotes = () => {
-            if (!canUseStorage) return [];
-
-            try {
-                const raw = window.localStorage.getItem(storageKey);
-                if (!raw) return [];
-                const parsed = JSON.parse(raw);
-                return Array.isArray(parsed) ? parsed : [];
-            } catch (error) {
-                return [];
-            }
-        };
-
-        const persistUserNotes = () => {
-            if (!canUseStorage) return;
-
-            const notes = Array.from(board.querySelectorAll('.sticky-note-card[data-user-note="true"]')).map((card) => ({
-                id: card.dataset.noteId || '',
-                author: card.dataset.author || '',
-                date: card.dataset.date || '',
-                message: card.dataset.message || '',
-                tone: card.dataset.tone || 'yellow',
-                left: card.style.getPropertyValue('--note-left') || '',
-                top: card.style.getPropertyValue('--note-top') || '',
-                width: card.style.getPropertyValue('--note-width') || '',
-                rotate: card.style.getPropertyValue('--note-rotate') || '',
-                dx: Number(card.dataset.dx || 0),
-                dy: Number(card.dataset.dy || 0)
-            }));
-
-            try {
-                window.localStorage.setItem(storageKey, JSON.stringify(notes));
-            } catch (error) {
-                /* noop */
-            }
         };
 
         const escapeHtml = (value) => String(value)
@@ -1213,7 +1165,7 @@ const composerToneStyle = tonePalette[composerCard.tone];
                 dx = 0,
                 dy = 0
             } = payload;
-            const { persist = true } = options;
+            const { skipIfExists = false, source = 'remote' } = options;
             const toneStyle = tonePalette[tone] || tonePalette.yellow;
             const safeAuthor = escapeHtml(author);
             const safeMessage = escapeHtml(message);
@@ -1236,13 +1188,17 @@ const composerToneStyle = tonePalette[composerCard.tone];
                 : (rotate || `${randomRotate}deg`);
             const noteId = id || `guest-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
+            if (skipIfExists && board.querySelector(`.sticky-note-card[data-note-id="${noteId}"]`)) {
+                return null;
+            }
+
             card.className = 'sticky-note-card';
-            card.dataset.userNote = 'true';
             card.dataset.noteId = noteId;
             card.dataset.author = author;
             card.dataset.date = displayDate;
             card.dataset.message = message;
             card.dataset.tone = tone;
+            card.dataset.source = source;
             card.dataset.dx = String(Number(dx || 0));
             card.dataset.dy = String(Number(dy || 0));
             card.style.setProperty('--note-left', leftValue);
@@ -1274,9 +1230,6 @@ const composerToneStyle = tonePalette[composerCard.tone];
                 applyOffset(card, Number(dx || 0), Number(dy || 0));
             }
             updateCount();
-            if (persist) {
-                persistUserNotes();
-            }
             return card;
         };
 
@@ -1317,11 +1270,39 @@ const composerToneStyle = tonePalette[composerCard.tone];
                 }
             }
 
-            if (card.dataset.userNote === 'true') {
-                persistUserNotes();
-            }
-
             activeState = null;
+        };
+
+        const loadRemoteNotes = async () => {
+            try {
+                const response = await fetch(notesEndpoint, {
+                    headers: {
+                        Accept: 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Request failed with ${response.status}`);
+                }
+
+                const notes = await response.json();
+                if (!Array.isArray(notes)) return;
+
+                notes.slice().reverse().forEach((note) => {
+                    createNoteCard({
+                        id: `remote-${note.id}`,
+                        author: note.author,
+                        date: note.date,
+                        message: note.message,
+                        tone: note.tone
+                    }, {
+                        skipIfExists: true,
+                        source: 'remote'
+                    });
+                });
+            } catch (error) {
+                console.warn('[sukiame] Failed to load guestbook notes:', error.message);
+            }
         };
 
         if (lightbox) {
@@ -1365,15 +1346,47 @@ const composerToneStyle = tonePalette[composerCard.tone];
 
                 if (!author || !message) return;
 
-                createNoteCard({ author, message, tone });
-                composerForm.reset();
-                closeComposer();
+                const submitButton = composerForm.querySelector('.guestbook-submit');
+                if (submitButton) submitButton.disabled = true;
+
+                fetch(notesEndpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Accept: 'application/json'
+                    },
+                    body: JSON.stringify({ author, message, tone })
+                })
+                    .then(async (response) => {
+                        const payload = await response.json().catch(() => ({}));
+                        if (!response.ok) {
+                            throw new Error(payload.error || `Request failed with ${response.status}`);
+                        }
+                        return payload;
+                    })
+                    .then((note) => {
+                        createNoteCard({
+                            id: `remote-${note.id}`,
+                            author: note.author,
+                            date: note.date,
+                            message: note.message,
+                            tone: note.tone
+                        }, {
+                            skipIfExists: true,
+                            source: 'remote'
+                        });
+                        composerForm.reset();
+                        closeComposer();
+                    })
+                    .catch((error) => {
+                        console.warn('[sukiame] Failed to submit guestbook note:', error.message);
+                        window.alert('Failed to post note. Please try again in a moment.');
+                    })
+                    .finally(() => {
+                        if (submitButton) submitButton.disabled = false;
+                    });
             });
         }
-
-        readStoredNotes().forEach((item) => {
-            createNoteCard(item, { persist: false });
-        });
 
         window.addEventListener('pointermove', handleMove);
         window.addEventListener('pointerup', finishDrag);
@@ -1386,5 +1399,6 @@ const composerToneStyle = tonePalette[composerCard.tone];
         });
 
         updateCount();
+        loadRemoteNotes();
     })();
 </script>
