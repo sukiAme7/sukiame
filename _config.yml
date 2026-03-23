@@ -142,26 +142,12 @@ photo_wall:
       width: 166
       rotate: 12
       aspect: '16 / 10'
-    - title: Soft Portrait
-      image: https://picsum.photos/seed/suki-wall-10/900/620
-      x: 53
-      y: 69
-      width: 170
-      rotate: 18
-      aspect: '16 / 10'
     - title: Paper Note
       image: https://picsum.photos/seed/suki-wall-11/760/860
       x: 72
       y: 69
       width: 146
       rotate: -10
-      aspect: '1 / 1.08'
-    - title: Pink Frame
-      image: https://picsum.photos/seed/suki-wall-12/760/860
-      x: 86
-      y: 74
-      width: 150
-      rotate: 9
       aspect: '1 / 1.08'
 
 guestbook:
