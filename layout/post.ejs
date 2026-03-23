@@ -9,9 +9,21 @@ const categories = toArray(page.categories);
 const tags = toArray(page.tags);
 const photoWallConfig = theme.photo_wall || {};
 const guestbookConfig = theme.guestbook || {};
-const resolveUrl = (value) => { const link = value || '#'; return /^(?:[a-z][a-z0-9+.-]*:)?\/\//i.test(link) || /^(#|mailto:|tel:)/i.test(link) ? link : url_for(link); };
-const getEntry = (group, key) => { const source = group && group[key] ? group[key] : {}; return typeof source === 'string' ? { url: source } : source; };
-const getCover = (post) => { const photo = Array.isArray(post.photos) && post.photos.length ? post.photos[0] : ''; const raw = post.cover || post.thumbnail || post.banner || post.top_img || photo || ''; if (!raw) return ''; const value = typeof raw === 'string' ? raw : (raw.path || raw.url || ''); return value ? resolveUrl(value) : ''; };
+const resolveUrl = (value) => {
+  const link = value || '#';
+  return /^(?:[a-z][a-z0-9+.-]*:)?\/\//i.test(link) || /^(#|mailto:|tel:)/i.test(link) ? link : url_for(link);
+};
+const getEntry = (group, key) => {
+  const source = group && group[key] ? group[key] : {};
+  return typeof source === 'string' ? { url: source } : source;
+};
+const getCover = (post) => {
+  const photo = Array.isArray(post.photos) && post.photos.length ? post.photos[0] : '';
+  const raw = post.cover || post.thumbnail || post.banner || post.top_img || photo || '';
+  if (!raw) return '';
+  const value = typeof raw === 'string' ? raw : (raw.path || raw.url || '');
+  return value ? resolveUrl(value) : '';
+};
 const postCover = getCover(page);
 const homeMenu = getEntry(theme.menu, 'Home');
 const archiveMenu = getEntry(theme.menu, 'Archives');
@@ -22,6 +34,21 @@ const dockLinks = [
   photoWallConfig.url ? { label: photoWallConfig.title || 'Photo Wall', url: photoWallConfig.url, icon: photoWallConfig.icon || 'fa-solid fa-image' } : null,
   guestbookMenu.url && guestbookMenu.url !== '#' ? { label: guestbookMenu.label || 'Guestbook', url: guestbookMenu.url, icon: guestbookMenu.icon || guestbookConfig.icon || 'fa-solid fa-message' } : null
 ].filter(Boolean);
+
+const codeBlocksConfig = theme.code_blocks || {};
+const normalizeThemeValue = String(codeBlocksConfig.theme || 'light').trim().toLowerCase();
+const codeBlockTheme = ['darker', 'pale night', 'light', 'ocean', 'false'].includes(normalizeThemeValue) ? normalizeThemeValue : 'light';
+const codeBlockThemeClass = codeBlockTheme === 'false' ? 'plain' : codeBlockTheme.replace(/\s+/g, '-');
+const codeBlockMacStyle = !!codeBlocksConfig.macStyle;
+const codeBlockHeightLimitRaw = Number(codeBlocksConfig.height_limit);
+const codeBlockHeightLimit = Number.isFinite(codeBlockHeightLimitRaw) && codeBlockHeightLimitRaw > 0 ? codeBlockHeightLimitRaw : 0;
+const codeBlockWordWrap = !!codeBlocksConfig.word_wrap;
+const codeBlockCopy = codeBlocksConfig.copy !== false;
+const codeBlockLanguage = codeBlocksConfig.language !== false;
+const codeBlockShrinkMode = codeBlocksConfig.shrink === true ? 'collapsed' : (codeBlocksConfig.shrink === 'none' ? 'none' : 'expanded');
+const codeBlockFullpage = !!codeBlocksConfig.fullpage;
+const codeBlockToggleVisible = codeBlockShrinkMode !== 'none';
+const codeBlockCollapsedByDefault = codeBlockShrinkMode === 'collapsed';
 %>
 <style>
   .post-shell{position:relative;min-height:100vh;padding:1rem;overflow:hidden}.post-shell::before,.post-shell::after{content:"";position:absolute;inset:-12%;pointer-events:none}.post-shell::before{background:radial-gradient(circle at 14% 16%,rgba(255,255,255,.6),rgba(255,255,255,0) 22%),radial-gradient(circle at 14% 84%,rgba(125,211,252,.22),rgba(125,211,252,0) 20%),radial-gradient(circle at 76% 80%,rgba(134,239,172,.22),rgba(134,239,172,0) 20%);filter:blur(18px);opacity:.96}.post-shell::after{background:linear-gradient(180deg,rgba(255,255,255,.22),rgba(255,255,255,.08))}
@@ -29,8 +56,313 @@ const dockLinks = [
   .dock-avatar,.dock-link{width:2.35rem;height:2.35rem;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;background:rgba(255,255,255,.66);color:#64748b;box-shadow:0 6px 18px rgba(148,163,184,.12);transition:transform .25s ease,background .25s ease,color .25s ease}.dock-avatar img{width:1.8rem;height:1.8rem;border-radius:999px;object-fit:cover}.dock-link:hover,.dock-avatar:hover{transform:translateY(-2px);background:rgba(255,255,255,.82)}.dock-link.is-active{background:rgba(255,255,255,.84);color:#38bdf8}
   .post-grid{position:relative;z-index:1;width:min(1180px,100%);margin:0 auto;padding-top:5.2rem;display:grid;grid-template-columns:minmax(0,2fr) minmax(18rem,.92fr);gap:1.5rem;align-items:start}.post-main,.post-side{display:flex;flex-direction:column;gap:1.5rem}.post-hero,.post-panel{padding:1.35rem 1.4rem}
   .post-kicker{font-size:.76rem;letter-spacing:.14em;text-transform:uppercase;color:#94a3b8;font-weight:800}.post-title{margin:.65rem 0 0;font-size:clamp(1.9rem,3vw,2.7rem);line-height:1.06;color:#1e293b;font-weight:900;letter-spacing:-.03em}.post-meta{margin-top:1rem;display:flex;flex-wrap:wrap;gap:.6rem}.post-pill,.post-chip,.post-side-link{display:inline-flex;align-items:center;gap:.42rem;padding:.48rem .76rem;border-radius:999px;background:rgba(255,255,255,.56);color:#475569;font-size:.78rem;font-weight:800;box-shadow:inset 0 1px 0 rgba(255,255,255,.32)}
-  .post-cover{display:block;width:100%;aspect-ratio:16/7.8;margin-top:1rem;border-radius:1.3rem;overflow:hidden;background:linear-gradient(135deg,#bae6fd,#d9f99d)}.post-cover img{width:100%;height:100%;object-fit:cover;display:block}.post-body{color:#334155;font-size:1rem;line-height:1.95;font-weight:600}.post-body :first-child{margin-top:0}.post-body h2,.post-body h3,.post-body h4{color:#1e293b;line-height:1.2;margin:1.9rem 0 .85rem;font-weight:900}.post-body p,.post-body ul,.post-body ol,.post-body blockquote{margin:.9rem 0}.post-body a{color:#0369a1;font-weight:800}.post-body blockquote{padding:.9rem 1rem;border-left:4px solid rgba(125,211,252,.8);background:rgba(255,255,255,.34);border-radius:.9rem;color:#475569}.post-body code{padding:.14rem .38rem;border-radius:.45rem;background:rgba(255,255,255,.58);color:#0f172a;font-size:.92em}.post-body figure.highlight{margin:1rem 0;padding:.95rem 1rem;border-radius:1rem;background:rgba(15,23,42,.92);color:#e2e8f0;overflow:auto}.post-body figure.highlight table{width:100%;border-spacing:0}.post-body figure.highlight td{vertical-align:top}.post-body figure.highlight .gutter{width:2rem;color:rgba(148,163,184,.85);user-select:none}.post-body figure.highlight pre{margin:0;font-family:Consolas,'Courier New',monospace;font-size:.92rem;line-height:1.7}
+  .post-cover{display:block;width:100%;aspect-ratio:16/7.8;margin-top:1rem;border-radius:1.3rem;overflow:hidden;background:linear-gradient(135deg,#bae6fd,#d9f99d)}.post-cover img{width:100%;height:100%;object-fit:cover;display:block}
+  .post-body{color:#334155;font-size:1rem;line-height:1.95;font-weight:600}.post-body :first-child{margin-top:0}.post-body h2,.post-body h3,.post-body h4{color:#1e293b;line-height:1.2;margin:1.9rem 0 .85rem;font-weight:900}.post-body p,.post-body ul,.post-body ol,.post-body blockquote{margin:.9rem 0}.post-body a{color:#0369a1;font-weight:800}.post-body blockquote{padding:.9rem 1rem;border-left:4px solid rgba(125,211,252,.8);background:rgba(255,255,255,.34);border-radius:.9rem;color:#475569}.post-body code{padding:.14rem .38rem;border-radius:.45rem;background:rgba(255,255,255,.58);color:#0f172a;font-size:.92em}
+  .post-body .code-block-enhanced{--code-block-bg:#f8fbff;--code-block-border:rgba(186,230,253,.9);--code-toolbar-bg:rgba(255,255,255,.92);--code-toolbar-border:rgba(203,213,225,.72);--code-toolbar-text:#475569;--code-toolbar-muted:#94a3b8;--code-block-text:#1e293b;--code-block-gutter:#94a3b8;--code-block-line:#e2e8f0;position:relative;margin:1.1rem 0;border:1px solid var(--code-block-border);border-radius:1.05rem;background:var(--code-block-bg);box-shadow:0 16px 32px rgba(148,163,184,.12);overflow:hidden}
+  .post-body[data-code-theme="darker"] .code-block-enhanced{--code-block-bg:#0f172a;--code-block-border:rgba(71,85,105,.8);--code-toolbar-bg:#111827;--code-toolbar-border:rgba(51,65,85,.9);--code-toolbar-text:#e2e8f0;--code-toolbar-muted:#94a3b8;--code-block-text:#e5eef9;--code-block-gutter:#64748b;--code-block-line:rgba(51,65,85,.85)}
+  .post-body[data-code-theme="pale-night"] .code-block-enhanced{--code-block-bg:#1e293b;--code-block-border:rgba(99,102,241,.28);--code-toolbar-bg:#243247;--code-toolbar-border:rgba(71,85,105,.95);--code-toolbar-text:#e2e8f0;--code-toolbar-muted:#a5b4fc;--code-block-text:#e6edf7;--code-block-gutter:#94a3b8;--code-block-line:rgba(71,85,105,.7)}
+  .post-body[data-code-theme="ocean"] .code-block-enhanced{--code-block-bg:#082f49;--code-block-border:rgba(34,211,238,.32);--code-toolbar-bg:#0f3f64;--code-toolbar-border:rgba(12,74,110,.95);--code-toolbar-text:#ecfeff;--code-toolbar-muted:#67e8f9;--code-block-text:#e0f7ff;--code-block-gutter:#7dd3fc;--code-block-line:rgba(34,211,238,.26)}
+  .post-body[data-code-theme="plain"] .code-block-enhanced{--code-block-bg:rgba(15,23,42,.92);--code-block-border:rgba(51,65,85,.9);--code-toolbar-bg:rgba(15,23,42,.96);--code-toolbar-border:rgba(51,65,85,.9);--code-toolbar-text:#e2e8f0;--code-toolbar-muted:#94a3b8;--code-block-text:#e2e8f0;--code-block-gutter:#94a3b8;--code-block-line:rgba(51,65,85,.85)}
+  .post-body .code-block-toolbar{display:flex;align-items:center;gap:.7rem;min-height:2.85rem;padding:.65rem .9rem;border-bottom:1px solid var(--code-toolbar-border);background:var(--code-toolbar-bg);color:var(--code-toolbar-text)}
+  .post-body .code-block-dots{display:inline-flex;align-items:center;gap:.35rem}
+  .post-body .code-block-dot{width:.72rem;height:.72rem;border-radius:999px;background:#f87171;box-shadow:inset 0 1px 0 rgba(255,255,255,.4)}
+  .post-body .code-block-dot:nth-child(2){background:#fbbf24}
+  .post-body .code-block-dot:nth-child(3){background:#34d399}
+  .post-body .code-block-language{font-size:.72rem;line-height:1;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:var(--code-toolbar-muted)}
+  .post-body .code-block-toolbar-spacer{flex:1}
+  .post-body .code-block-actions{display:inline-flex;align-items:center;gap:.45rem}
+  .post-body .code-block-button{display:inline-flex;align-items:center;justify-content:center;gap:.35rem;padding:.4rem .58rem;border-radius:.72rem;border:1px solid transparent;background:rgba(255,255,255,.08);color:var(--code-toolbar-text);font-size:.72rem;font-weight:800;letter-spacing:.02em;transition:background .2s ease,border-color .2s ease,transform .2s ease}
+  .post-body[data-code-theme="light"] .code-block-button,.post-body[data-code-theme="plain"] .code-block-button{background:rgba(148,163,184,.14)}
+  .post-body .code-block-button:hover{transform:translateY(-1px);background:rgba(125,211,252,.18);border-color:rgba(125,211,252,.3)}
+  .post-body .code-block-button.is-success{color:#0f766e;border-color:rgba(16,185,129,.22);background:rgba(16,185,129,.12)}
+  .post-body .code-block-scroll{overflow:auto}
+  .post-body .code-block-enhanced.has-height-limit .code-block-scroll{max-height:var(--code-block-max-height)}
+  .post-body .code-block-enhanced.is-collapsed .code-block-scroll{max-height:var(--code-block-collapsed-height)}
+  .post-body figure.highlight{margin:0;padding:0;border-radius:0;background:transparent;color:var(--code-block-text);overflow:visible}
+  .post-body figure.highlight table{width:100%;border-spacing:0;border-collapse:collapse}
+  .post-body figure.highlight td{vertical-align:top}
+  .post-body figure.highlight .gutter{width:2.8rem;padding:.95rem .8rem .95rem .95rem;color:var(--code-block-gutter);background:rgba(255,255,255,.04);border-right:1px solid var(--code-block-line);user-select:none}
+  .post-body figure.highlight .code{padding:.95rem 1rem}
+  .post-body figure.highlight pre{margin:0;font-family:Consolas,'Courier New',monospace;font-size:.92rem;line-height:1.7;white-space:pre}
+  .post-body .code-block-enhanced.is-wrap figure.highlight pre{white-space:pre-wrap;word-break:break-word}
+  .post-body .code-block-enhanced.is-wrap figure.highlight .line{white-space:pre-wrap}
+  .post-body figure.highlight .line{display:block;min-height:1.7em}
+  .post-body .code-block-modal{position:fixed;inset:0;z-index:1200;display:none;align-items:center;justify-content:center;padding:1.5rem;background:rgba(15,23,42,.48);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+  .post-body .code-block-modal.is-open{display:flex}
+  .post-body .code-block-modal-dialog{width:min(960px,100%);max-height:85vh;display:flex;flex-direction:column;border-radius:1.1rem;overflow:hidden;border:1px solid rgba(148,163,184,.22);background:#0f172a;box-shadow:0 28px 60px rgba(15,23,42,.35)}
+  .post-body .code-block-modal-head{display:flex;align-items:center;justify-content:space-between;padding:.8rem 1rem;border-bottom:1px solid rgba(51,65,85,.88);background:#111827;color:#e2e8f0}
+  .post-body .code-block-modal-head strong{font-size:.78rem;letter-spacing:.08em;text-transform:uppercase}
+  .post-body .code-block-modal-close{display:inline-flex;align-items:center;justify-content:center;width:2rem;height:2rem;border-radius:.7rem;border:1px solid transparent;background:rgba(148,163,184,.12);color:#e2e8f0;transition:background .2s ease,transform .2s ease}
+  .post-body .code-block-modal-close:hover{background:rgba(125,211,252,.18);transform:translateY(-1px)}
+  .post-body .code-block-modal-body{padding:1rem;overflow:auto}
+  .post-body .code-block-modal-body pre{margin:0;font-family:Consolas,'Courier New',monospace;font-size:.92rem;line-height:1.7;white-space:pre;word-break:normal;color:#e2e8f0}
   .post-panel-title{margin:0 0 .85rem;font-size:.98rem;color:#1e293b;font-weight:900}.post-side-list{display:grid;gap:.6rem}.post-side-link{justify-content:space-between;font-size:.82rem}.post-side-link:hover{background:rgba(255,255,255,.7);transform:translateY(-2px)}.post-side-empty{color:#94a3b8;font-size:.84rem;line-height:1.8;font-weight:700}
-  @media (max-width:1024px){.post-grid{grid-template-columns:1fr}} @media (max-width:768px){.post-shell{padding:1rem}.post-dock,.post-status{position:relative;top:auto;left:auto;right:auto;margin-bottom:.85rem}.post-dock{width:fit-content}.post-grid{padding-top:.2rem}} @media (max-width:640px){.post-dock{width:100%;justify-content:space-between;gap:.4rem}.dock-avatar,.dock-link{width:2.1rem;height:2.1rem}}
+  @media (max-width:1024px){.post-grid{grid-template-columns:1fr}}
+  @media (max-width:768px){.post-shell{padding:1rem}.post-dock,.post-status{position:relative;top:auto;left:auto;right:auto;margin-bottom:.85rem}.post-dock{width:fit-content}.post-grid{padding-top:.2rem}.post-body .code-block-toolbar{padding:.6rem .75rem;flex-wrap:wrap}.post-body .code-block-actions{width:100%;justify-content:flex-end}}
+  @media (max-width:640px){.post-dock{width:100%;justify-content:space-between;gap:.4rem}.dock-avatar,.dock-link{width:2.1rem;height:2.1rem}.post-body .code-block-button{padding:.36rem .5rem}.post-body .code-block-modal{padding:1rem}}
 </style>
-<div class="post-shell"><nav class="post-dock glass-card" aria-label="Post navigation"><a href="<%- resolveUrl(homeMenu.url || '/') %>" class="dock-avatar" aria-label="Home"><img src="<%- theme.avatar || '/images/avatar-cat.svg' %>" alt="avatar"></a><% dockLinks.forEach((item) => { %><a href="<%- resolveUrl(item.url) %>" class="dock-link <%= item.active ? 'is-active' : '' %>" aria-label="<%- item.label %>" title="<%- item.label %>"><i class="<%- item.icon %>"></i></a><% }) %></nav><section class="post-status glass-card" aria-label="Post summary"><strong><%- page.title %></strong><span><%- date(page.date, 'YYYY.MM.DD') %></span><small><%- `${categories.length} Categories / ${tags.length} Tags` %></small></section><div class="post-grid"><main class="post-main"><section class="glass-card post-hero"><span class="post-kicker">Blog Post</span><h1 class="post-title"><%- page.title %></h1><div class="post-meta"><span class="post-pill"><i class="fa-regular fa-calendar"></i><%- date(page.date, 'YYYY.MM.DD') %></span><% categories.forEach((item) => { %><a href="<%- url_for(item.path) %>" class="post-chip"><i class="fa-solid fa-folder-open"></i><%- item.name %></a><% }) %><% tags.forEach((item) => { %><a href="<%- url_for(item.path) %>" class="post-chip"><i class="fa-solid fa-hashtag"></i><%- item.name %></a><% }) %></div><% if (postCover) { %><div class="post-cover"><img src="<%- postCover %>" alt="<%- page.title %>" loading="lazy"></div><% } %></section><article class="glass-card post-panel"><div class="post-body"><%- page.content %></div></article></main><aside class="post-side"><section class="glass-card post-panel"><h2 class="post-panel-title">Taxonomy</h2><% if (!categories.length && !tags.length) { %><div class="post-side-empty">Add `categories:` or `tags:` to this post front matter to organize it here.</div><% } else { %><div class="post-side-list"><% categories.forEach((item) => { %><a href="<%- url_for(item.path) %>" class="post-side-link"><span><i class="fa-solid fa-folder-tree"></i>&nbsp;<%- item.name %></span><span>Category</span></a><% }) %><% tags.forEach((item) => { %><a href="<%- url_for(item.path) %>" class="post-side-link"><span><i class="fa-solid fa-hashtag"></i>&nbsp;<%- item.name %></span><span>Tag</span></a><% }) %></div><% } %></section><section class="glass-card post-panel"><h2 class="post-panel-title">More</h2><div class="post-side-list"><a href="<%- url_for('/archives/') %>" class="post-side-link"><span><i class="fa-solid fa-feather-pointed"></i>&nbsp;Back To Blog</span><i class="fa-solid fa-arrow-right"></i></a><% if (page.prev) { %><a href="<%- url_for(page.prev.path) %>" class="post-side-link"><span><i class="fa-solid fa-arrow-left"></i>&nbsp;<%- page.prev.title %></span><span>Prev</span></a><% } %><% if (page.next) { %><a href="<%- url_for(page.next.path) %>" class="post-side-link"><span><%- page.next.title %>&nbsp;<i class="fa-solid fa-arrow-right"></i></span><span>Next</span></a><% } %></div></section></aside></div></div>
+<div class="post-shell">
+  <nav class="post-dock glass-card" aria-label="Post navigation">
+    <a href="<%- resolveUrl(homeMenu.url || '/') %>" class="dock-avatar" aria-label="Home">
+      <img src="<%- theme.avatar || '/images/avatar-cat.svg' %>" alt="avatar">
+    </a>
+    <% dockLinks.forEach((item) => { %>
+      <a href="<%- resolveUrl(item.url) %>" class="dock-link <%= item.active ? 'is-active' : '' %>" aria-label="<%- item.label %>" title="<%- item.label %>">
+        <i class="<%- item.icon %>"></i>
+      </a>
+    <% }) %>
+  </nav>
+
+  <section class="post-status glass-card" aria-label="Post summary">
+    <strong><%- page.title %></strong>
+    <span><%- date(page.date, 'YYYY.MM.DD') %></span>
+    <small><%- `${categories.length} Categories / ${tags.length} Tags` %></small>
+  </section>
+
+  <div class="post-grid">
+    <main class="post-main">
+      <section class="glass-card post-hero">
+        <span class="post-kicker">Blog Post</span>
+        <h1 class="post-title"><%- page.title %></h1>
+        <div class="post-meta">
+          <span class="post-pill"><i class="fa-regular fa-calendar"></i><%- date(page.date, 'YYYY.MM.DD') %></span>
+          <% categories.forEach((item) => { %><a href="<%- url_for(item.path) %>" class="post-chip"><i class="fa-solid fa-folder-open"></i><%- item.name %></a><% }) %>
+          <% tags.forEach((item) => { %><a href="<%- url_for(item.path) %>" class="post-chip"><i class="fa-solid fa-hashtag"></i><%- item.name %></a><% }) %>
+        </div>
+        <% if (postCover) { %>
+          <div class="post-cover"><img src="<%- postCover %>" alt="<%- page.title %>" loading="lazy"></div>
+        <% } %>
+      </section>
+
+      <article class="glass-card post-panel">
+        <div
+          class="post-body"
+          data-code-theme="<%- codeBlockThemeClass %>"
+          data-code-mac-style="<%- codeBlockMacStyle ? 'true' : 'false' %>"
+          data-code-height-limit="<%- codeBlockHeightLimit %>"
+          data-code-word-wrap="<%- codeBlockWordWrap ? 'true' : 'false' %>"
+          data-code-copy="<%- codeBlockCopy ? 'true' : 'false' %>"
+          data-code-language="<%- codeBlockLanguage ? 'true' : 'false' %>"
+          data-code-shrink-mode="<%- codeBlockShrinkMode %>"
+          data-code-fullpage="<%- codeBlockFullpage ? 'true' : 'false' %>"
+        ><%- page.content %></div>
+      </article>
+    </main>
+
+    <aside class="post-side">
+      <section class="glass-card post-panel">
+        <h2 class="post-panel-title">Taxonomy</h2>
+        <% if (!categories.length && !tags.length) { %>
+          <div class="post-side-empty">Add `categories:` or `tags:` to this post front matter to organize it here.</div>
+        <% } else { %>
+          <div class="post-side-list">
+            <% categories.forEach((item) => { %><a href="<%- url_for(item.path) %>" class="post-side-link"><span><i class="fa-solid fa-folder-tree"></i>&nbsp;<%- item.name %></span><span>Category</span></a><% }) %>
+            <% tags.forEach((item) => { %><a href="<%- url_for(item.path) %>" class="post-side-link"><span><i class="fa-solid fa-hashtag"></i>&nbsp;<%- item.name %></span><span>Tag</span></a><% }) %>
+          </div>
+        <% } %>
+      </section>
+
+      <section class="glass-card post-panel">
+        <h2 class="post-panel-title">More</h2>
+        <div class="post-side-list">
+          <a href="<%- url_for('/archives/') %>" class="post-side-link"><span><i class="fa-solid fa-feather-pointed"></i>&nbsp;Back To Blog</span><i class="fa-solid fa-arrow-right"></i></a>
+          <% if (page.prev) { %><a href="<%- url_for(page.prev.path) %>" class="post-side-link"><span><i class="fa-solid fa-arrow-left"></i>&nbsp;<%- page.prev.title %></span><span>Prev</span></a><% } %>
+          <% if (page.next) { %><a href="<%- url_for(page.next.path) %>" class="post-side-link"><span><%- page.next.title %>&nbsp;<i class="fa-solid fa-arrow-right"></i></span><span>Next</span></a><% } %>
+        </div>
+      </section>
+    </aside>
+  </div>
+</div>
+
+<script>
+  (() => {
+    const postBody = document.querySelector('.post-body');
+    if (!postBody) return;
+
+    const figures = Array.from(postBody.querySelectorAll('figure.highlight'));
+    if (!figures.length) return;
+
+    const config = {
+      theme: postBody.dataset.codeTheme || 'light',
+      macStyle: postBody.dataset.codeMacStyle === 'true',
+      heightLimit: Number(postBody.dataset.codeHeightLimit || 0),
+      wordWrap: postBody.dataset.codeWordWrap === 'true',
+      copy: postBody.dataset.codeCopy === 'true',
+      language: postBody.dataset.codeLanguage === 'true',
+      shrinkMode: postBody.dataset.codeShrinkMode || 'expanded',
+      fullpage: postBody.dataset.codeFullpage === 'true'
+    };
+
+    const formatLanguage = (lang) => {
+      const raw = String(lang || 'code').replace(/^language-/, '').replace(/_/g, '-').trim();
+      const aliases = {
+        js: 'JavaScript',
+        ts: 'TypeScript',
+        shell: 'Shell',
+        sh: 'Shell',
+        bash: 'Bash',
+        zsh: 'Zsh',
+        ps1: 'PowerShell',
+        powershell: 'PowerShell',
+        yml: 'YAML',
+        md: 'Markdown',
+        plaintext: 'Text'
+      };
+      return aliases[raw.toLowerCase()] || raw;
+    };
+
+    const createModal = () => {
+      const modal = document.createElement('div');
+      modal.className = 'code-block-modal';
+      modal.innerHTML = `
+        <div class="code-block-modal-dialog">
+          <div class="code-block-modal-head">
+            <strong>Code Preview</strong>
+            <button type="button" class="code-block-modal-close" aria-label="Close code preview">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+          <div class="code-block-modal-body"><pre><code></code></pre></div>
+        </div>
+      `;
+      const close = () => modal.classList.remove('is-open');
+      modal.addEventListener('click', (event) => {
+        if (event.target === modal || event.target.closest('.code-block-modal-close')) {
+          close();
+        }
+      });
+      window.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') close();
+      });
+      document.body.appendChild(modal);
+      return modal;
+    };
+
+    const modal = config.fullpage ? createModal() : null;
+
+    const copyText = async (value) => {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(value);
+        return;
+      }
+      const textarea = document.createElement('textarea');
+      textarea.value = value;
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.focus();
+      textarea.select();
+      document.execCommand('copy');
+      textarea.remove();
+    };
+
+    figures.forEach((figure) => {
+      if (figure.parentElement && figure.parentElement.classList.contains('code-block-scroll')) return;
+
+      const languageClass = Array.from(figure.classList).find((className) => className !== 'highlight') || 'code';
+      const languageLabel = formatLanguage(languageClass);
+      const wrapper = document.createElement('div');
+      const toolbar = document.createElement('div');
+      const spacer = document.createElement('div');
+      const actions = document.createElement('div');
+      const scroll = document.createElement('div');
+      const codeCell = figure.querySelector('td.code pre') || figure.querySelector('pre');
+      const codeText = codeCell ? codeCell.innerText.replace(/\u00a0/g, ' ').replace(/\n$/, '') : figure.innerText.trim();
+      const collapsedHeight = config.heightLimit > 0 ? config.heightLimit : 280;
+
+      wrapper.className = 'code-block-enhanced';
+      if (config.wordWrap) wrapper.classList.add('is-wrap');
+      if (config.heightLimit > 0) wrapper.classList.add('has-height-limit');
+      if (config.shrinkMode === 'collapsed') wrapper.classList.add('is-collapsed');
+      wrapper.style.setProperty('--code-block-max-height', `${config.heightLimit}px`);
+      wrapper.style.setProperty('--code-block-collapsed-height', `${collapsedHeight}px`);
+
+      toolbar.className = 'code-block-toolbar';
+      spacer.className = 'code-block-toolbar-spacer';
+      actions.className = 'code-block-actions';
+      scroll.className = 'code-block-scroll';
+
+      if (config.macStyle) {
+        const dots = document.createElement('span');
+        dots.className = 'code-block-dots';
+        dots.innerHTML = '<span class="code-block-dot"></span><span class="code-block-dot"></span><span class="code-block-dot"></span>';
+        toolbar.appendChild(dots);
+      }
+
+      if (config.language) {
+        const language = document.createElement('span');
+        language.className = 'code-block-language';
+        language.textContent = languageLabel;
+        toolbar.appendChild(language);
+      }
+
+      toolbar.appendChild(spacer);
+
+      if (config.copy) {
+        const copyButton = document.createElement('button');
+        copyButton.type = 'button';
+        copyButton.className = 'code-block-button';
+        copyButton.innerHTML = '<i class="fa-regular fa-copy"></i><span>Copy</span>';
+        copyButton.addEventListener('click', async () => {
+          try {
+            await copyText(codeText);
+            copyButton.classList.add('is-success');
+            copyButton.innerHTML = '<i class="fa-solid fa-check"></i><span>Copied</span>';
+            window.setTimeout(() => {
+              copyButton.classList.remove('is-success');
+              copyButton.innerHTML = '<i class="fa-regular fa-copy"></i><span>Copy</span>';
+            }, 1400);
+          } catch (error) {
+            copyButton.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i><span>Failed</span>';
+            window.setTimeout(() => {
+              copyButton.innerHTML = '<i class="fa-regular fa-copy"></i><span>Copy</span>';
+            }, 1400);
+          }
+        });
+        actions.appendChild(copyButton);
+      }
+
+      if (config.shrinkMode !== 'none') {
+        const toggleButton = document.createElement('button');
+        toggleButton.type = 'button';
+        toggleButton.className = 'code-block-button';
+        const syncToggle = () => {
+          const collapsed = wrapper.classList.contains('is-collapsed');
+          toggleButton.innerHTML = collapsed
+            ? '<i class="fa-solid fa-chevron-down"></i><span>Expand</span>'
+            : '<i class="fa-solid fa-chevron-up"></i><span>Collapse</span>';
+        };
+        toggleButton.addEventListener('click', () => {
+          wrapper.classList.toggle('is-collapsed');
+          syncToggle();
+        });
+        syncToggle();
+        actions.appendChild(toggleButton);
+      }
+
+      if (config.fullpage && modal) {
+        const fullpageButton = document.createElement('button');
+        fullpageButton.type = 'button';
+        fullpageButton.className = 'code-block-button';
+        fullpageButton.innerHTML = '<i class="fa-solid fa-up-right-and-down-left-from-center"></i><span>Full</span>';
+        fullpageButton.addEventListener('click', () => {
+          const title = modal.querySelector('.code-block-modal-head strong');
+          const targetCode = modal.querySelector('code');
+          if (title) title.textContent = `${languageLabel} Code`;
+          if (targetCode) targetCode.textContent = codeText;
+          modal.classList.add('is-open');
+        });
+        actions.appendChild(fullpageButton);
+      }
+
+      if (actions.children.length) {
+        toolbar.appendChild(actions);
+      }
+
+      figure.parentNode.insertBefore(wrapper, figure);
+      wrapper.appendChild(toolbar);
+      wrapper.appendChild(scroll);
+      scroll.appendChild(figure);
+    });
+  })();
+</script>
