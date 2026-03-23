@@ -1,6 +1,6 @@
 <% const latestPosts=site.posts.sort('date', -1).limit(3).toArray(); const authorName=config.author || config.title
   || 'sukiame' ; const heroLine=config.description || 'The only way to do great is to love what you do.' ; const
-  heroSource=config.description_source || '' ; const menuEntries=[ { key: 'Home' , fallbackLabel: 'Home' ,
+  heroSource=config.description_source || '' ; const profileSubtitle=config.subtitle || '\u4eba\u8981\u5148\u5b66\u4f1a\u559c\u6b22\u81ea\u5df1' ; const menuEntries=[ { key: 'Home' , fallbackLabel: 'Home' ,
   fallbackUrl: '/' , fallbackIcon: 'fa-solid fa-house' , active: true }, { key: 'Archives' , fallbackLabel: 'Blog' ,
   fallbackUrl: '/archives/' , fallbackIcon: 'fa-solid fa-feather-pointed' }, { key: 'Friends' , fallbackLabel: 'Friends'
   , fallbackUrl: '#' , fallbackIcon: 'fa-solid fa-link' }, { key: 'Guestbook' , fallbackLabel: 'Guestbook' ,
@@ -130,9 +130,7 @@
                 <div class="profile-status"></div>
               </div>
               <h1 class="profile-title font-cute"><%- authorName %></h1>
-              <p class="profile-subtitle">
-                人要先学会喜欢自己
-              </p>
+              <p class="profile-subtitle"><%- profileSubtitle %></p>
 
               <div class="profile-actions">
                 <% socialEntries.forEach((item)=> { %>
