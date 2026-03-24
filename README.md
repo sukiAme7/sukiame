@@ -1,72 +1,148 @@
 # SukiAme
 
-A soft glassmorphism Hexo theme with a bento-style homepage, animated page transitions, archive views, a friends page, a photo wall, and a guestbook layout.
+![SukiAme preview](assets/image.png)
 
-This repository is organized as a reusable theme, not as a personal blog backup. The default theme config is intentionally generic so you can clone it and replace the sample content with your own.
+SukiAme is a soft glassmorphism Hexo theme with a bento-style homepage, animated page transitions, a unified blog/archive view, a friends page, a photo wall, and a sticky-note guestbook.
+
+This repository is the theme itself, not a full Hexo blog backup. It does, however, ship with real default content and links so a fresh install already looks complete. The current defaults intentionally keep the author's GitHub, email, Nankai VPN, and Coze links as part of the theme's sample data.
 
 ## Features
 
-- Bento-style homepage with profile, navigation, latest posts, activity, calendar, and visitor card
-- Animated transitions between home, archives, tags, categories, friends, and posts
-- Dedicated layouts for archives, posts, friends, guestbook, and photo wall
-- Optional GitHub contribution activity panel via `GITHUB_TOKEN`
-- Built-in Atom feed generator
-- Optional Busuanzi visitor counter integration
+- Bento-style homepage with profile, navigation, latest posts, GitHub activity, photo preview, clock, calendar, visitor card, and like button
+- Unified archive layout for archives, categories, and tags
+- Dedicated layouts for posts, friends, guestbook, and photo wall
+- Animated page transitions with prefetching for key internal routes
+- Floating article table of contents on post pages
+- Enhanced code blocks with copy, collapse, word-wrap, and optional full-view behavior
+- KaTeX math rendering for inline and block formulas
+- Built-in Atom feed generator at `/atom.xml`
+- Optional GitHub contribution sync via `GITHUB_TOKEN`
+- Optional Busuanzi visitor counter
+- Optional remote APIs for homepage likes and guestbook notes
 
 ## Requirements
 
+- Node.js and npm
 - Hexo `^8.0.0`
-- EJS renderer enabled in your Hexo site
+- `hexo-renderer-ejs` enabled in your Hexo site
 
 ## Installation
 
-1. Enter your Hexo site directory.
-2. Copy or clone this repository into `themes/sukiame`.
-3. Set `theme: sukiame` in your site `_config.yml`.
-4. Copy the theme `_config.yml` and adjust the values you want to use.
+### 1. Install Hexo and create a site
+
+```bash
+npm install -g hexo-cli
+hexo init my-blog
+cd my-blog
+npm install
+```
+
+### 2. Add this theme
+
+Copy or clone this repository into your Hexo site's `themes/sukiame` directory.
 
 Example:
 
-```yaml
-# site _config.yml
-theme: sukiame
+```bash
+git clone <your-theme-repo-url> themes/sukiame
 ```
 
-## Recommended Hexo Packages
+### 3. Install the theme dependency
 
-Install the common generators/renderers if your site does not already have them:
+This theme depends on `katex`, so install the theme's own `package.json` dependencies:
+
+```bash
+npm install --prefix themes/sukiame
+```
+
+You can also enter `themes/sukiame` manually and run `npm install`.
+
+### 4. Install common Hexo packages if your site does not already have them
 
 ```bash
 npm install hexo-generator-archive hexo-generator-category hexo-generator-index hexo-generator-tag hexo-renderer-ejs hexo-renderer-marked
 ```
 
+### 5. Enable the theme
+
+In your site's root `_config.yml`:
+
+```yaml
+theme: sukiame
+```
+
+### 6. Configure the theme
+
+The theme defaults live in `themes/sukiame/_config.yml`.
+
+You can either:
+
+- edit `themes/sukiame/_config.yml` directly
+- create a site-level `_config.sukiame.yml` to override the defaults without modifying the theme files
+
+### 7. Check the favicon path before deployment
+
+The sample config currently points `favicon` to `/images/favicon.ico`. Add that file to your site or change the config to an existing image path before deploying.
+
+## Included Routes
+
+This theme already includes default page entries inside its own `source/` directory, so a fresh install can generate these routes directly:
+
+- `/`
+- `/archives/`
+- `/categories/`
+- `/tags/`
+- `/friends/`
+- `/guestbook/`
+- `/photo-wall/`
+- `/atom.xml`
+
+You do not need to manually run `hexo new page friends`, `guestbook`, or `photo-wall` just to get the default pages working.
+
 ## Theme Config
 
-The theme config lives in `_config.yml`.
+The main actively used sections in `_config.yml` are:
 
-Key sections:
+- `avatar`
+- `favicon`
+- `menu`
+- `social`
+- `github`
+- `activity`
+- `visitor_counter`
+- `home_like`
+- `photo_wall`
+- `guestbook`
+- `friends`
+- `code_blocks`
 
-- `menu`: top-level navigation items
-- `social`: social links shown on the homepage
-- `activity`: GitHub activity card fallback values
-- `visitor_counter`: optional Busuanzi integration, disabled by default
-- `photo_wall`: photo wall labels, preview images, and sample items
-- `guestbook`: sticky-note board content and composer card
-- `friends`: friends page cards and exchange notes
+The shipped defaults include:
 
-Hexo also supports a site-level override file named `_config.sukiame.yml`, which is a good place to keep your own values without editing the theme defaults directly.
+- the author's GitHub and email links under `social`
+- sample GitHub activity settings
+- sample friend cards, guestbook notes, and photo-wall data
+- sample homepage like settings
 
-## Optional Features
+## Optional Dynamic Features
 
 ### GitHub Activity
 
-To fetch real GitHub contribution data during `hexo generate`, set:
+To fetch live GitHub contribution data during `hexo generate`, set a token in the environment and configure the username in the theme config.
 
-```bash
-GITHUB_TOKEN=your_github_token
+PowerShell:
+
+```powershell
+$env:GITHUB_TOKEN="your_github_token"
+hexo generate
 ```
 
-Then configure:
+Bash:
+
+```bash
+GITHUB_TOKEN=your_github_token hexo generate
+```
+
+Theme config:
 
 ```yaml
 github:
@@ -74,7 +150,44 @@ github:
   days: 20
 ```
 
-If the token is missing or the request fails, the theme falls back to the configured `activity.cells`.
+If the token is missing or the request fails, the theme falls back to `activity.cells`.
+
+### Homepage Like API
+
+The homepage like button uses the `home_like.endpoint` value. The current default is:
+
+```yaml
+home_like:
+  endpoint: /api/like/home-hero
+```
+
+Expected behavior:
+
+- `GET /api/like/home-hero` returns JSON like `{ "count": 123 }`
+- `POST /api/like/home-hero` returns JSON like `{ "count": 124 }`
+
+If this endpoint is unavailable, the homepage still renders with the configured base count, but live count syncing and remote like submission will not work.
+
+### Guestbook Notes API
+
+The guestbook page loads and submits notes through:
+
+- `GET /api/guestbook/notes`
+- `POST /api/guestbook/notes`
+
+Expected note shape:
+
+```json
+{
+  "id": 1,
+  "author": "SukiAme",
+  "date": "2026.03.24",
+  "message": "Hello",
+  "tone": "blue"
+}
+```
+
+If the API is unavailable, the page still shows the notes defined in `guestbook.items`, but remote note publishing will fail.
 
 ### Visitor Counter
 
@@ -96,44 +209,11 @@ Available metrics:
 - `site_uv`
 - `site_pv`
 
-## Pages
+## Notes
 
-Create the extra pages you want to use:
-
-```bash
-hexo new page friends
-hexo new page guestbook
-hexo new page photo-wall
-```
-
-Then set their front matter layouts:
-
-```yaml
----
-title: Friends
-layout: friends
----
-```
-
-```yaml
----
-title: Guestbook
-layout: guestbook
----
-```
-
-```yaml
----
-title: Photo Wall
-layout: photo-wall
----
-```
-
-## Development Notes
-
-- The theme currently uses CDN-hosted Tailwind, Font Awesome, and Google Fonts in the main layout.
-- If you deploy in a restricted network environment, consider self-hosting those assets.
-- The local `.example` workspace is ignored and can be used as a private playground without affecting the theme repository.
+- Tailwind CSS, Font Awesome, and Google Fonts are loaded from CDN in the main layout
+- KaTeX CSS and fonts are copied into `public/vendor/katex` during generation
+- If you deploy in a restricted network environment, consider self-hosting the CDN assets
 
 ## License
 
