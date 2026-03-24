@@ -70,6 +70,7 @@ visitor_counter:
 
 home_like:
   count: 99
+  endpoint: /api/like/home-hero
   storage_key: 'sukiame:home-like:ui'
 
 photo_wall:

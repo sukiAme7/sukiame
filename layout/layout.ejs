@@ -1524,8 +1524,11 @@
             const icon = likeButton.querySelector('.heart-icon');
             const countEl = likeButton.querySelector('.like-count');
             const storageKey = likeButton.dataset.storageKey || 'sukiame:home-like:ui';
+            const endpoint = likeButton.dataset.likeEndpoint || '/api/like/home-hero';
             const baseCount = Number(likeButton.dataset.likeCount || '0');
+            let displayCount = baseCount;
             let liked = false;
+            let pending = false;
 
             try {
                 liked = window.localStorage.getItem(storageKey) === 'true';
@@ -1533,7 +1536,9 @@
 
             const render = () => {
                 if (likeButton) likeButton.classList.toggle('is-liked', liked);
-                if (countEl) countEl.textContent = String(baseCount + (liked ? 1 : 0));
+                if (likeButton) likeButton.setAttribute('aria-pressed', liked ? 'true' : 'false');
+                if (likeButton) likeButton.disabled = pending;
+                if (countEl) countEl.textContent = String(displayCount);
             };
 
             const animate = () => {
@@ -1545,16 +1550,74 @@
                 });
             };
 
-            likeButton.addEventListener('click', () => {
-                liked = !liked;
+            const loadCount = async () => {
                 try {
-                    window.localStorage.setItem(storageKey, liked ? 'true' : 'false');
-                } catch (error) {}
+                    const response = await fetch(endpoint, {
+                        headers: {
+                            Accept: 'application/json'
+                        }
+                    });
+                    if (!response.ok) {
+                        throw new Error(`Request failed with ${response.status}`);
+                    }
+                    const payload = await response.json();
+                    if (typeof payload.count === 'number' && Number.isFinite(payload.count)) {
+                        displayCount = payload.count;
+                        render();
+                    }
+                } catch (error) {
+                    console.warn('[sukiame] Failed to load hero like count:', error.message);
+                }
+            };
+
+            likeButton.addEventListener('click', async () => {
+                if (liked || pending) {
+                    animate();
+                    return;
+                }
+
+                pending = true;
                 render();
-                animate();
+
+                try {
+                    const response = await fetch(endpoint, {
+                        method: 'POST',
+                        headers: {
+                            Accept: 'application/json'
+                        }
+                    });
+                    const payload = await response.json().catch(() => ({}));
+                    if (!response.ok) {
+                        throw new Error(payload.error || `Request failed with ${response.status}`);
+                    }
+
+                    liked = true;
+                    if (typeof payload.count === 'number' && Number.isFinite(payload.count)) {
+                        displayCount = payload.count;
+                    } else {
+                        displayCount += 1;
+                    }
+
+                    try {
+                        window.localStorage.setItem(storageKey, 'true');
+                    } catch (error) {}
+
+                    render();
+                    animate();
+                } catch (error) {
+                    console.warn('[sukiame] Failed to submit hero like:', error.message);
+                } finally {
+                    pending = false;
+                    render();
+                }
             });
 
+            if (liked && displayCount < 1) {
+                displayCount = 1;
+            }
+
             render();
+            loadCount();
         })();
 
         (() => {
