@@ -31,7 +31,7 @@ const dockLinks = [
 const archiveGroups = []; const archiveMap = new Map();
 allPosts.forEach((post) => { const year = date(post.date, 'YYYY'); const month = date(post.date, 'MM'); const key = `${year}-${month}`; if (!archiveMap.has(key)) { const entry = { key, year, month, label: `${year}.${month}`, path: url_for(`/archives/${year}/${month}/`), count: 0 }; archiveMap.set(key, entry); archiveGroups.push(entry); } archiveMap.get(key).count += 1; });
 const isCategoryPage = !!page.category; const isTagPage = !!page.tag;
-let heroTitle = 'Blog'; let heroSubtitle = 'Latest writing, categories, archives and tags in one place.'; let heroMeta = `${allPosts.length} Posts`;
+let heroTitle = 'Blog'; let heroSubtitle = 'Latest writing, categories, archives and tags.'; let heroMeta = `${allPosts.length} Posts`;
 if (isCategoryPage) { const match = categories.find((item) => item.name === page.category); heroTitle = `Category / ${page.category}`; heroSubtitle = 'Posts collected under this category.'; heroMeta = `${match ? match.length : posts.length} Posts`; }
 else if (isTagPage) { const match = tags.find((item) => item.name === page.tag); heroTitle = `Tag / ${page.tag}`; heroSubtitle = 'Posts connected by this tag.'; heroMeta = `${match ? match.length : posts.length} Posts`; }
 else if (page.year && page.month) { heroTitle = `Archive / ${page.year}.${String(page.month).padStart(2, '0')}`; heroSubtitle = 'A monthly look back through the blog.'; heroMeta = `${posts.length} Posts`; }
