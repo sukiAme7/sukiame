@@ -68,6 +68,10 @@ visitor_counter:
   label: TOTAL VISITORS
   placeholder: '521,314'
 
+home_like:
+  count: 99
+  storage_key: 'sukiame:home-like:ui'
+
 photo_wall:
   title: Photo Wall
   subtitle: Life Moments

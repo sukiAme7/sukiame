@@ -1,6 +1,6 @@
 <% const latestPosts=site.posts.sort('date', -1).limit(3).toArray(); const authorName=config.author || config.title
   || 'sukiame' ; const heroLine=config.description || 'The only way to do great is to love what you do.' ; const
-  heroSource=config.description_source || '' ; const profileSubtitle=config.subtitle || '\u4eba\u8981\u5148\u5b66\u4f1a\u559c\u6b22\u81ea\u5df1' ; const menuEntries=[ { key: 'Home' , fallbackLabel: 'Home' ,
+  heroSource=config.description_source || '' ; const profileSubtitle=config.subtitle || '\u4eba\u8981\u5148\u5b66\u4f1a\u559c\u6b22\u81ea\u5df1' ; const homeLikeConfig = theme.home_like || {}; const homeLikeCount = Number.isFinite(Number(homeLikeConfig.count)) ? Number(homeLikeConfig.count) : 99; const homeLikeStorageKey = homeLikeConfig.storage_key || 'sukiame:home-like:ui'; const menuEntries=[ { key: 'Home' , fallbackLabel: 'Home' ,
   fallbackUrl: '/' , fallbackIcon: 'fa-solid fa-house' , active: true }, { key: 'Archives' , fallbackLabel: 'Blog' ,
   fallbackUrl: '/archives/' , fallbackIcon: 'fa-solid fa-feather-pointed' }, { key: 'Friends' , fallbackLabel: 'Friends'
   , fallbackUrl: '#' , fallbackIcon: 'fa-solid fa-link' }, { key: 'Guestbook' , fallbackLabel: 'Guestbook' ,
@@ -164,7 +164,23 @@
             <section class="glass-card hero-panel">
               <i class="fa-solid fa-cloud-showers-heavy hero-illustration" aria-hidden="true"></i>
               <div class="hero-content">
-                <h3 class="hero-greeting">Good <span id="greeting">Evening</span></h3>
+                <div class="hero-top-row">
+                  <h3 class="hero-greeting">Good <span id="greeting">Evening</span></h3>
+                  <div class="hero-action-row">
+                    <button
+                      class="heart-pill-btn"
+                      type="button"
+                      id="home-like-pill"
+                      data-like-count="<%- homeLikeCount %>"
+                      data-storage-key="<%- homeLikeStorageKey %>"
+                      aria-label="Like this homepage"
+                    >
+                      <i class="fa-solid fa-heart text-red-500 text-xl heart-icon transition-colors"></i>
+                      <div class="heart-count-divider"></div>
+                      <span class="like-count"><%- homeLikeCount %></span>
+                    </button>
+                  </div>
+                </div>
                 <h2 class="hero-title">
                   Hi, I'm
                   <span class="hero-name font-cute"><%- authorName %>!</span>
