@@ -280,6 +280,7 @@ const codeBlockCollapsedByDefault = codeBlockShrinkMode === 'collapsed';
     margin: 2.5rem 0 1rem;
     font-weight: 800;
     letter-spacing: -0.01em;
+    scroll-margin-top: 6.5rem;
   }
 
   .post-body h2 { font-size: 1.72rem; }
@@ -743,6 +744,147 @@ const codeBlockCollapsedByDefault = codeBlockShrinkMode === 'collapsed';
     font-weight: 500;
   }
 
+  .post-floating-toc {
+    position: fixed;
+    top: 8.2rem;
+    right: max(1.25rem, calc((100vw - 1220px) / 2 + 0.5rem));
+    z-index: 36;
+    width: 320px;
+    max-width: calc(100vw - 2rem);
+    opacity: 0;
+    visibility: hidden;
+    transform: translate3d(0.9rem, 0, 0);
+    transition: opacity 0.24s ease, transform 0.24s ease, visibility 0.24s ease;
+    pointer-events: none;
+  }
+
+  .post-floating-toc.is-visible {
+    opacity: 1;
+    visibility: visible;
+    transform: translate3d(0, 0, 0);
+    pointer-events: auto;
+  }
+
+  .post-floating-toc.toc-box.style-1 {
+    font-family: 'Noto Sans SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei UI', 'Microsoft YaHei', 'Noto Sans CJK SC', sans-serif;
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.08);
+    border: 1px solid rgba(0, 0, 0, 0.02);
+  }
+
+  .post-floating-toc .toc-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.9rem;
+    margin-bottom: 16px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  .post-floating-toc .toc-title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    color: #1e293b;
+    font-size: 1.1rem;
+    line-height: 1;
+  }
+
+  .post-floating-toc .toc-title-wrap i {
+    color: #1e293b;
+    font-size: 1.1rem;
+  }
+
+  .post-floating-toc .toc-percent {
+    flex: 0 0 auto;
+    color: #94a3b8;
+    font-size: 1.1rem;
+    line-height: 1;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .post-floating-toc .toc-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.34rem;
+    max-height: calc(100vh - 15rem);
+    overflow: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(148, 163, 184, 0.55) transparent;
+  }
+
+  .post-floating-toc .toc-list::-webkit-scrollbar {
+    width: 0.24rem;
+  }
+
+  .post-floating-toc .toc-list::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background: rgba(148, 163, 184, 0.46);
+  }
+
+  .post-floating-toc .toc-entry {
+    min-width: 0;
+  }
+
+  .post-floating-toc .toc-item {
+    display: block;
+    min-width: 0;
+    padding: 8px 12px;
+    border-radius: 6px;
+    color: #64748b;
+    font-size: 0.9rem;
+    line-height: 1.75;
+    font-weight: 600;
+    word-break: break-word;
+    background: transparent;
+    text-decoration: none;
+    transition: color 0.2s ease, background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+  }
+
+  .post-floating-toc .toc-item.indent-1 {
+    padding-left: 24px;
+  }
+
+  .post-floating-toc .toc-item.indent-2 {
+    padding-left: 36px;
+  }
+
+  .post-floating-toc .toc-item:hover {
+    color: #0ea5e9;
+    background: #f0f9ff;
+  }
+
+  .post-floating-toc .toc-item.active {
+    color: #0ea5e9;
+    background: #f0f9ff;
+    font-weight: 600;
+    position: relative;
+  }
+
+  .post-floating-toc .toc-item.active::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 10%;
+    width: 3px;
+    height: 80%;
+    background: #0ea5e9;
+    border-radius: 0 4px 4px 0;
+  }
+
+  .post-floating-toc .toc-item.indent-1,
+  .post-floating-toc .toc-item.indent-2 {
+    font-weight: 500;
+  }
+
   @media (max-width: 1180px) {
     .post-grid {
       grid-template-columns: minmax(0, 1fr) minmax(15rem, 17rem);
@@ -753,6 +895,10 @@ const codeBlockCollapsedByDefault = codeBlockShrinkMode === 'collapsed';
     .post-grid {
       grid-template-columns: 1fr;
       width: min(860px, 100%);
+    }
+
+    .post-floating-toc {
+      display: none;
     }
   }
 
@@ -881,6 +1027,185 @@ const codeBlockCollapsedByDefault = codeBlockShrinkMode === 'collapsed';
     </aside>
   </div>
 </div>
+
+<nav class="post-floating-toc toc-box style-1" data-floating-toc aria-label="Table of contents" aria-hidden="true">
+  <div class="toc-header">
+    <div class="toc-title-wrap">
+      <i class="fa-solid fa-list"></i>
+      <span>目录</span>
+    </div>
+    <div class="toc-percent" data-toc-percent>0%</div>
+  </div>
+  <ul class="toc-list" data-toc-list></ul>
+</nav>
+
+<script>
+  (() => {
+    const postBody = document.querySelector('.post-body');
+    const postReadingPanel = document.querySelector('.post-reading-panel');
+    const tocPanel = document.querySelector('[data-floating-toc]');
+    if (!postBody || !postReadingPanel || !tocPanel) return;
+
+    const tocList = tocPanel.querySelector('[data-toc-list]');
+    const tocPercent = tocPanel.querySelector('[data-toc-percent]');
+    const headings = Array.from(postBody.querySelectorAll('h2, h3, h4'))
+      .filter((heading) => heading.textContent && heading.textContent.trim());
+
+    const slugHistory = new Map();
+    const usedIds = new Set();
+    const slugify = (value) => {
+      const base = String(value || '')
+        .toLowerCase()
+        .normalize('NFKD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9\u4e00-\u9fa5\s-]/g, '')
+        .trim()
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-')
+        .replace(/^-|-$/g, '');
+      return base || 'section';
+    };
+
+    if (!headings.length) {
+      tocPanel.remove();
+      return;
+    }
+
+    const tocItems = headings.map((heading, index) => {
+      let headingId = heading.id ? String(heading.id).trim() : '';
+
+      if (!headingId || usedIds.has(headingId)) {
+        const slugBase = slugify(heading.textContent);
+        const serial = (slugHistory.get(slugBase) || 0) + 1;
+        slugHistory.set(slugBase, serial);
+        headingId = serial === 1 ? slugBase : `${slugBase}-${serial}`;
+      }
+
+      heading.id = headingId;
+      usedIds.add(headingId);
+
+      const level = Number(heading.tagName.slice(1));
+      return {
+        id: headingId,
+        level,
+        text: heading.textContent.trim(),
+        index: index + 1,
+        heading
+      };
+    });
+
+    tocItems.forEach((item) => {
+      const li = document.createElement('li');
+      const link = document.createElement('a');
+
+      li.className = `toc-entry level-${item.level}`;
+      link.className = 'toc-item';
+      if (item.level === 3) link.classList.add('indent-1');
+      if (item.level >= 4) link.classList.add('indent-2');
+      link.href = `#${item.id}`;
+      link.dataset.tocTarget = item.id;
+      link.textContent = item.text;
+      li.appendChild(link);
+      tocList.appendChild(li);
+    });
+
+    const links = Array.from(tocList.querySelectorAll('.toc-item'));
+    const getScrollOffset = () => window.scrollY || window.pageYOffset || document.documentElement.scrollTop || 0;
+    const getAbsoluteTop = (element) => getScrollOffset() + element.getBoundingClientRect().top;
+
+    const updateProgress = () => {
+      if (!tocPercent) return;
+
+      const currentOffset = getScrollOffset();
+      const bodyTop = getAbsoluteTop(postBody);
+      const progressStart = bodyTop - window.innerHeight * 0.18;
+      const progressEnd = bodyTop + postBody.offsetHeight - window.innerHeight * 0.62;
+      const distance = Math.max(progressEnd - progressStart, 1);
+      const raw = ((currentOffset - progressStart) / distance) * 100;
+      const percent = Math.max(0, Math.min(100, Math.round(raw)));
+
+      tocPercent.textContent = `${percent}%`;
+    };
+
+    const updateVisibility = () => {
+      if (window.innerWidth <= 1024) {
+        tocPanel.classList.remove('is-visible');
+        tocPanel.setAttribute('aria-hidden', 'true');
+        return false;
+      }
+
+      const currentOffset = getScrollOffset();
+      const readingTop = getAbsoluteTop(postReadingPanel);
+      const bodyTop = getAbsoluteTop(postBody);
+      const showAfter = Math.max(0, readingTop - window.innerHeight * 0.22);
+      const hideAfter = bodyTop + postBody.offsetHeight - window.innerHeight * 0.42;
+      const visible = currentOffset >= showAfter && currentOffset <= hideAfter;
+
+      tocPanel.classList.toggle('is-visible', visible);
+      tocPanel.setAttribute('aria-hidden', visible ? 'false' : 'true');
+      return visible;
+    };
+
+    let activeId = '';
+    const updateActiveLink = () => {
+      const currentOffset = getScrollOffset();
+      const threshold = currentOffset + window.innerHeight * 0.24;
+      let activeItem = tocItems[0];
+
+      tocItems.forEach((item) => {
+        const top = currentOffset + item.heading.getBoundingClientRect().top;
+        if (top <= threshold) activeItem = item;
+      });
+
+      if (activeId === activeItem.id) return;
+      activeId = activeItem.id;
+
+      links.forEach((link) => {
+        const isActive = link.dataset.tocTarget === activeItem.id;
+        link.classList.toggle('active', isActive);
+        if (isActive) {
+          link.setAttribute('aria-current', 'true');
+        } else {
+          link.removeAttribute('aria-current');
+        }
+      });
+    };
+
+    const refreshTocState = () => {
+      updateProgress();
+      const visible = updateVisibility();
+      if (!visible) return;
+      updateActiveLink();
+    };
+
+    tocList.addEventListener('click', (event) => {
+      const link = event.target.closest('.toc-item');
+      if (!link) return;
+
+      const target = document.getElementById(link.dataset.tocTarget || '');
+      if (!target) return;
+
+      event.preventDefault();
+      const top = getScrollOffset() + target.getBoundingClientRect().top - 92;
+      window.history.replaceState(null, '', `#${target.id}`);
+      window.scrollTo({ top, behavior: 'smooth' });
+    });
+
+    let ticking = false;
+    const requestRefresh = () => {
+      if (ticking) return;
+      ticking = true;
+      window.requestAnimationFrame(() => {
+        ticking = false;
+        refreshTocState();
+      });
+    };
+
+    requestRefresh();
+    window.addEventListener('scroll', requestRefresh, { passive: true });
+    window.addEventListener('resize', requestRefresh);
+  })();
+</script>
 
 <script>
   (() => {
