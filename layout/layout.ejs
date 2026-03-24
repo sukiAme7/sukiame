@@ -545,10 +545,12 @@
             justify-content: center;
             gap: 0.8rem;
             border-radius: 999px;
-            background-color: #fff;
-            border: 2px solid #fef2f2;
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.78);
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.2s, background-color 0.2s, border-color 0.2s;
+            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.2s, border-color 0.2s;
             user-select: none;
             -webkit-user-select: none;
         }
@@ -563,14 +565,13 @@
         }
 
         .heart-pill-btn.is-liked {
-            background: linear-gradient(135deg, #fff, #fff1f2);
-            border-color: #fecdd3;
+            border-color: rgba(248, 113, 113, 0.26);
         }
 
         .heart-count-divider {
             width: 1px;
             height: 1.25rem;
-            background: #fee2e2;
+            background: rgba(248, 113, 113, 0.18);
             flex: none;
         }
 
