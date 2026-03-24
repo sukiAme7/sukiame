@@ -1,10 +1,12 @@
 # SukiAme
 
+[English](README.md) | [简体中文](README.zh-CN.md)
+
+![SukiAme preview](assets/image.png)
 
 SukiAme is a soft glassmorphism Hexo theme with a bento-style homepage, animated page transitions, a unified blog/archive view, a friends page, a photo wall, and a sticky-note guestbook.
 
 This repository is the theme itself, not a full Hexo blog backup. It does, however, ship with real default content and links so a fresh install already looks complete. The current defaults intentionally keep the author's GitHub, email, Nankai VPN, and Coze links as part of the theme's sample data.
-![SukiAme preview](assets/image.png)
 
 ## Features
 
