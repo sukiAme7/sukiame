@@ -280,6 +280,20 @@ code_blocks:
   shrink: false
   fullpage: false
 
+post_copyright:
+  enable: true
+  decode: true
+  author_href: https://sukiame.cn
+  license: CC BY-NC-SA 4.0
+  license_url: https://creativecommons.org/licenses/by-nc-sa/4.0/
+
+# Per-post front matter overrides:
+# copyright: false
+# copyright_author: Your Name
+# copyright_author_href: https://example.com
+# copyright_url: https://example.com/posts/hello/
+# copyright_info: This article belongs to Your Name. Please keep the original link when reusing.
+
 # Stylings
 colors:
   primary: '#4ade80'
