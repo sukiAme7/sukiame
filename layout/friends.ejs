@@ -132,7 +132,7 @@ const dockLinks = [
   .friend-card::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 100% 0,var(--friend-glow),transparent 42%),linear-gradient(160deg,rgba(255,255,255,.26),transparent 48%);z-index:-1;pointer-events:none}
   .friend-card:hover,.friend-card:focus-visible{transform:translateY(-4px);background:rgba(255,255,255,.86);box-shadow:0 24px 48px rgba(148,163,184,.16)}.friend-card:focus-visible{outline:0;box-shadow:0 0 0 5px var(--accent-ring),0 24px 48px rgba(148,163,184,.16)}
   .friend-card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem}.friend-head{display:grid;grid-template-columns:3.45rem minmax(0,1fr);align-items:start;gap:.82rem;min-width:0;flex:1}
-  .friend-avatar{width:3.45rem;height:3.45rem;border-radius:1rem;flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center;background:var(--friend-surface);border:1px solid rgba(255,255,255,.86);box-shadow:0 12px 26px rgba(148,163,184,.12);color:var(--friend-text);font-size:1.12rem;font-weight:900}.friend-avatar img{width:100%;height:100%;object-fit:cover;display:block}
+  .friend-avatar{width:3.45rem;height:3.45rem;border-radius:1rem;flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.96);border:1px solid rgba(255,255,255,.86);box-shadow:0 12px 26px rgba(148,163,184,.12);color:var(--friend-text);font-size:1.12rem;font-weight:900}.friend-avatar img{width:100%;height:100%;object-fit:contain;display:block;padding:.32rem;box-sizing:border-box}
   .friend-title-wrap{min-width:0;width:100%}.friend-name{margin:0;font-size:1.05rem;line-height:1.2;color:#1e293b;font-weight:900}.friend-url{margin:.3rem 0 0;color:#94a3b8;font-size:.74rem;font-weight:700;line-height:1.4;word-break:break-all}
   .friend-open{width:2rem;height:2rem;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;background:rgba(255,255,255,.74);color:#94a3b8;box-shadow:0 8px 18px rgba(148,163,184,.12);transition:transform .24s ease,color .24s ease,background .24s ease;flex-shrink:0}
   .friend-card:hover .friend-open,.friend-card:focus-visible .friend-open{transform:translate(2px,-2px);color:var(--friend-text);background:rgba(255,255,255,.92)}
@@ -252,6 +252,7 @@ const dockLinks = [
     applyFilters();
   });
 </script>
+
 
 
 
