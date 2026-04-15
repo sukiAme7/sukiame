@@ -1,38 +1,284 @@
-<%
+﻿<%
 const friendsConfig = theme.friends || {};
 const pageTitle = friendsConfig.page_title || friendsConfig.title || page.title || 'Friends';
 const pageSubtitle = friendsConfig.page_subtitle || friendsConfig.subtitle || 'Gentle Corners Of The Web';
 const pageIcon = friendsConfig.icon || 'fa-solid fa-link';
 const pageNote = friendsConfig.note || 'A few lovely places worth keeping close.';
 const countLabel = friendsConfig.count_label || 'Sites';
-const exchangeTitle = friendsConfig.exchange_title || 'Link Exchange';
-const exchangeCopy = friendsConfig.exchange_copy || 'If your site has its own style and a little warmth, I would love to exchange links.';
-const exchangeRules = Array.isArray(friendsConfig.exchange_rules) ? friendsConfig.exchange_rules : [];
+const primaryColor = (theme.colors || {}).primary || '#4ade80';
+const heroCopy = [pageSubtitle, pageNote].filter(Boolean).join(' · ');
 const resolveUrl = (value) => { const link = value || '#'; return /^(?:[a-z][a-z0-9+.-]*:)?\/\//i.test(link) || /^(#|mailto:|tel:)/i.test(link) ? link : url_for(link); };
+const toRgba = (value, alpha) => {
+  const hex = String(value || '').trim().replace('#', '');
+  const channels = /^[0-9a-fA-F]{6}$/.test(hex)
+    ? [parseInt(hex.slice(0, 2), 16), parseInt(hex.slice(2, 4), 16), parseInt(hex.slice(4, 6), 16)]
+    : [74, 222, 128];
+  return `rgba(${channels[0]}, ${channels[1]}, ${channels[2]}, ${alpha})`;
+};
+const simplifyUrl = (value) => String(value || '#').replace(/^https?:\/\//i, '').replace(/^www\./i, '').slice(0, 34) || '#';
+const normalizeToken = (value) => String(value || '').trim().toLowerCase().replace(/[\s_-]+/g, '');
+const defaultFilters = [
+  { key: 'all', label: '全部' },
+  { key: 'friend', label: '友链博客' },
+  { key: 'note', label: '学习笔记' },
+  { key: 'website', label: '实用网站' },
+  { key: 'tool', label: '工具推荐' }
+];
+const normalizeFilter = (entry, index) => {
+  const item = typeof entry === 'string' ? { key: entry, label: entry } : (entry || {});
+  const key = normalizeToken(item.key || item.value || item.id || item.filter || item.label || `filter${index + 1}`) || `filter${index + 1}`;
+  return {
+    key,
+    label: item.label || item.name || item.text || item.key || `分类 ${index + 1}`
+  };
+};
+let filters = Array.isArray(friendsConfig.filters) && friendsConfig.filters.length
+  ? friendsConfig.filters.map(normalizeFilter)
+  : defaultFilters.slice();
+if (!filters.some((filter) => filter.key === 'all')) {
+  filters = [defaultFilters[0]].concat(filters);
+}
+const seenFilters = new Set();
+filters = filters.filter((filter) => {
+  if (seenFilters.has(filter.key)) return false;
+  seenFilters.add(filter.key);
+  return true;
+});
+const filterLabelMap = filters.reduce((acc, filter) => {
+  acc[filter.key] = filter.label;
+  return acc;
+}, {});
+const accentPalette = {
+  blue: { tint: 'rgba(219,234,254,.92)', text: '#2563eb', glow: 'rgba(96,165,250,.22)', surface: 'linear-gradient(135deg, rgba(219,234,254,.96), rgba(255,255,255,.92))' },
+  amber: { tint: 'rgba(254,243,199,.94)', text: '#d97706', glow: 'rgba(251,191,36,.2)', surface: 'linear-gradient(135deg, rgba(254,243,199,.96), rgba(255,255,255,.92))' },
+  mint: { tint: 'rgba(220,252,231,.92)', text: '#15803d', glow: 'rgba(74,222,128,.2)', surface: 'linear-gradient(135deg, rgba(220,252,231,.96), rgba(255,255,255,.92))' },
+  slate: { tint: 'rgba(226,232,240,.94)', text: '#334155', glow: 'rgba(148,163,184,.18)', surface: 'linear-gradient(135deg, rgba(226,232,240,.96), rgba(255,255,255,.92))' },
+  pink: { tint: 'rgba(251,207,232,.9)', text: '#db2777', glow: 'rgba(244,114,182,.18)', surface: 'linear-gradient(135deg, rgba(251,207,232,.94), rgba(255,255,255,.92))' }
+};
+const accentByCategory = { friend: 'blue', note: 'amber', website: 'mint', tool: 'slate' };
+const defaultItems = [
+  { name: 'SukiAme', url: 'https://sukiame.github.io', avatar: '/images/avatar-my.svg', description: 'Rainy mood, code notes, and small web experiments.', category: 'friend', tags: ['生活记录'], accent: 'blue', rating: 5 },
+  { name: 'Linux os+net', url: 'https://blog.csdn.net/linux', description: '深入理解操作系统、网络协议以及实验记录。', category: 'note', tags: ['OS'], accent: 'amber', rating: 4.5 },
+  { name: 'Docker & YAML', url: 'https://docker.com/tools', description: '容器化部署、Compose 配置与实用开发工具。', category: 'tool', tags: ['DevOps'], accent: 'slate', rating: 4.5 }
+];
+const rawItems = Array.isArray(friendsConfig.items) && friendsConfig.items.length ? friendsConfig.items : defaultItems;
+const accentKeys = Object.keys(accentPalette);
+const friendItems = rawItems.map((entry, index) => {
+  const item = typeof entry === 'string' ? { name: simplifyUrl(entry), url: entry } : (entry || {});
+  const categoryKeyInput = normalizeToken(item.category || item.filter || item.group || '');
+  const categoryKey = filterLabelMap[categoryKeyInput] ? categoryKeyInput : '';
+  const categoryLabel = item.category_label || (categoryKey ? filterLabelMap[categoryKey] : '');
+  const accentKey = accentPalette[normalizeToken(item.accent)] ? normalizeToken(item.accent) : (accentByCategory[categoryKey] || accentKeys[index % accentKeys.length]);
+  const tags = (Array.isArray(item.tags) ? item.tags : []).map((tag) => String(tag).trim()).filter(Boolean);
+  const detailTags = tags
+    .filter((tag) => !categoryLabel || normalizeToken(tag) !== normalizeToken(categoryLabel))
+    .slice(0, 2);
+  const ratingValue = Number(item.rating);
+  const rating = Number.isFinite(ratingValue) ? Math.max(0, Math.min(5, Math.round(ratingValue * 2) / 2)) : (categoryKey === 'friend' ? 5 : 4.5);
+  const rawUrl = item.url || item.link || item.href || '#';
+  return {
+    name: item.name || `Friend ${index + 1}`,
+    url: resolveUrl(rawUrl),
+    avatar: item.avatar ? resolveUrl(item.avatar) : '',
+    avatarText: String(item.name || 'F').trim().charAt(0) || 'F',
+    description: item.description || '这里会显示站点简介，方便你快速判断要不要点进去看看。',
+    categoryKey,
+    categoryLabel,
+    tags: detailTags,
+    rating,
+    stars: Array.from({ length: 5 }, (_, starIndex) => rating >= starIndex + 1 ? 'full' : rating >= starIndex + 0.5 ? 'half' : 'empty'),
+    displayUrl: simplifyUrl(item.url_label || rawUrl || '#'),
+    searchText: `${item.name || ''} ${item.description || ''} ${rawUrl} ${categoryLabel} ${detailTags.join(' ')}`.toLowerCase(),
+    accent: accentPalette[accentKey]
+  };
+});
 const getEntry = (group, key) => { const source = group && group[key] ? group[key] : {}; return typeof source === 'string' ? { url: source } : source; };
 const homeMenu = getEntry(theme.menu, 'Home');
 const archiveMenu = getEntry(theme.menu, 'Archives');
 const guestbookMenu = getEntry(theme.menu, 'Guestbook');
 const photoWallConfig = theme.photo_wall || {};
-const emailSocial = getEntry(theme.social, 'Email');
-const accentPalette = { blue: { tint: 'rgba(186, 230, 253, 0.85)', text: '#0369a1', glow: 'rgba(56, 189, 248, 0.18)' }, pink: { tint: 'rgba(251, 207, 232, 0.85)', text: '#be185d', glow: 'rgba(244, 114, 182, 0.18)' }, green: { tint: 'rgba(220, 252, 231, 0.85)', text: '#15803d', glow: 'rgba(74, 222, 128, 0.18)' }, peach: { tint: 'rgba(254, 215, 170, 0.85)', text: '#c2410c', glow: 'rgba(251, 146, 60, 0.18)' }, lavender: { tint: 'rgba(233, 213, 255, 0.85)', text: '#7c3aed', glow: 'rgba(168, 85, 247, 0.18)' } };
-const defaultItems = [ { name: 'Paper Rain', url: 'https://example.com', avatar: 'https://api.dicebear.com/9.x/glass/svg?seed=paper-rain', description: 'Small essays, frontend sketches, and soft web experiments.', tags: ['Blog', 'Coding'], accent: 'blue' }, { name: 'Cloud Notes', url: 'https://example.com', avatar: 'https://api.dicebear.com/9.x/glass/svg?seed=cloud-notes', description: 'Essays, design fragments, and soft digital diaries.', tags: ['Essays', 'Design'], accent: 'lavender' }, { name: 'Mint Lab', url: 'https://example.com', avatar: 'https://api.dicebear.com/9.x/glass/svg?seed=mint-lab', description: 'A calm lab for frontend tinkering, tiny widgets, and UI drafts.', tags: ['Frontend', 'UI'], accent: 'green' }, { name: 'Night Shelf', url: 'https://example.com', avatar: 'https://api.dicebear.com/9.x/glass/svg?seed=night-shelf', description: 'Reading logs, favorite quotes, and a shelf of long-form notes.', tags: ['Reading', 'Notes'], accent: 'peach' }, { name: 'Pixel Harbor', url: 'https://example.com', avatar: 'https://api.dicebear.com/9.x/glass/svg?seed=pixel-harbor', description: 'Illustration studies, game screenshots, and visual journaling.', tags: ['Art', 'Visual'], accent: 'pink' } ];
-const rawItems = Array.isArray(friendsConfig.items) && friendsConfig.items.length ? friendsConfig.items : defaultItems;
-const friendItems = rawItems.map((item, index) => { const accentKey = accentPalette[item.accent] ? item.accent : Object.keys(accentPalette)[index % Object.keys(accentPalette).length]; const accent = accentPalette[accentKey]; return { name: item.name || `Friend ${index + 1}`, url: resolveUrl(item.url || '#'), avatar: item.avatar ? resolveUrl(item.avatar) : '', description: item.description || 'A lovely place on the web.', tags: Array.isArray(item.tags) ? item.tags : [], accent }; });
-const dockLinks = [ { label: homeMenu.label || 'Home', url: homeMenu.url || '/', icon: homeMenu.icon || 'fa-solid fa-house' }, { label: archiveMenu.label || 'Blog', url: archiveMenu.url || '/archives/', icon: archiveMenu.icon || 'fa-solid fa-feather-pointed' }, photoWallConfig.url ? { label: photoWallConfig.title || 'Photo Wall', url: photoWallConfig.url, icon: photoWallConfig.icon || 'fa-solid fa-image' } : null, guestbookMenu.url && guestbookMenu.url !== '#' ? { label: guestbookMenu.label || 'Guestbook', url: guestbookMenu.url, icon: guestbookMenu.icon || 'fa-solid fa-message' } : null, { label: pageTitle, url: friendsConfig.url || '/friends/', icon: pageIcon, active: true } ].filter(Boolean);
+const dockLinks = [
+  { label: homeMenu.label || 'Home', url: homeMenu.url || '/', icon: homeMenu.icon || 'fa-solid fa-house' },
+  { label: archiveMenu.label || 'Blog', url: archiveMenu.url || '/archives/', icon: archiveMenu.icon || 'fa-solid fa-feather-pointed' },
+  photoWallConfig.url ? { label: photoWallConfig.title || 'Photo Wall', url: photoWallConfig.url, icon: photoWallConfig.icon || 'fa-solid fa-image' } : null,
+  guestbookMenu.url && guestbookMenu.url !== '#' ? { label: guestbookMenu.label || 'Guestbook', url: guestbookMenu.url, icon: guestbookMenu.icon || 'fa-solid fa-message' } : null,
+  { label: pageTitle, url: friendsConfig.url || '/friends/', icon: pageIcon, active: true }
+].filter(Boolean);
 %>
 <style>
-  .friends-shell{position:relative;min-height:100vh;padding:1rem;overflow:hidden}.friends-shell::before,.friends-shell::after{content:"";position:absolute;inset:-12%;pointer-events:none}.friends-shell::before{background:radial-gradient(circle at 14% 16%,rgba(255,255,255,.62),rgba(255,255,255,0) 22%),radial-gradient(circle at 14% 84%,rgba(125,211,252,.22),rgba(125,211,252,0) 20%),radial-gradient(circle at 76% 80%,rgba(134,239,172,.22),rgba(134,239,172,0) 20%),radial-gradient(circle at 86% 20%,rgba(251,207,232,.18),rgba(251,207,232,0) 18%);filter:blur(18px);opacity:.96}.friends-shell::after{background:linear-gradient(180deg,rgba(255,255,255,.22),rgba(255,255,255,.08))}
-  .friends-dock,.friends-status{position:absolute;z-index:20}.friends-dock{top:1rem;left:1rem;padding:.6rem .75rem;display:inline-flex;align-items:center;gap:.55rem}.friends-status{top:1rem;right:1rem;min-width:12rem;padding:.75rem .95rem;display:flex;flex-direction:column;gap:.18rem}.friends-status strong{font-size:.98rem;color:#1e293b;font-weight:800}.friends-status span{font-size:.76rem;color:#64748b;font-weight:700}.friends-status small{font-size:.72rem;color:#94a3b8;font-weight:700}
-  .dock-avatar,.dock-link{width:2.35rem;height:2.35rem;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;background:rgba(255,255,255,.66);color:#64748b;box-shadow:0 6px 18px rgba(148,163,184,.12);transition:transform .25s ease,background .25s ease,color .25s ease}.dock-avatar img{width:1.8rem;height:1.8rem;border-radius:999px;object-fit:cover}.dock-link:hover,.dock-avatar:hover{transform:translateY(-2px);background:rgba(255,255,255,.82)}.dock-link.is-active{background:rgba(255,255,255,.84);color:#38bdf8}
-  .friends-grid{position:relative;z-index:1;width:min(1320px,100%);margin:0 auto;padding-top:5.2rem;display:grid;grid-template-columns:minmax(0,1.9fr) minmax(18rem,.72fr);gap:1.5rem;align-items:start}.friends-main,.friends-side{display:flex;flex-direction:column;gap:1.5rem}.friends-hero,.friends-panel{padding:1.4rem 1.45rem}
-  .friends-kicker{font-size:.76rem;letter-spacing:.14em;text-transform:uppercase;color:#94a3b8;font-weight:800}.friends-title{margin:.65rem 0 0;font-size:clamp(1.9rem,3vw,2.5rem);line-height:1.04;color:#1e293b;font-weight:900;letter-spacing:-.03em}.friends-copy{margin:.85rem 0 0;max-width:40rem;color:#64748b;font-size:.95rem;line-height:1.8;font-weight:600}
-  .friends-meta{margin-top:1rem;display:flex;flex-wrap:wrap;gap:.65rem}.friends-pill,.friend-tag,.friends-rule,.friends-cta{display:inline-flex;align-items:center;gap:.42rem;border-radius:999px;background:rgba(255,255,255,.56);color:#475569;box-shadow:inset 0 1px 0 rgba(255,255,255,.3)}.friends-pill,.friend-tag{padding:.46rem .72rem;font-size:.76rem;font-weight:800}
-  .friends-panel-head{display:flex;align-items:center;justify-content:space-between;gap:.75rem;margin-bottom:1rem}.friends-panel-title{margin:0;font-size:1rem;color:#1e293b;font-weight:900}.friends-panel-subtitle{font-size:.72rem;color:#94a3b8;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
-  .friends-list{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.9rem}.friend-card{position:relative;padding:.92rem .92rem .88rem;border-radius:1.2rem;border:1px solid rgba(255,255,255,.68);background:rgba(255,255,255,.38);box-shadow:inset 0 1px 0 rgba(255,255,255,.28),0 10px 26px rgba(148,163,184,.1);transition:transform .22s ease,background .22s ease,box-shadow .22s ease}.friend-card::after{content:"";position:absolute;inset:0;border-radius:inherit;background:radial-gradient(circle at 100% 0,var(--friend-glow),transparent 48%);pointer-events:none}.friend-card:hover{transform:translateY(-3px);background:rgba(255,255,255,.5);box-shadow:0 16px 34px rgba(148,163,184,.14)}
-  .friend-head{display:flex;align-items:center;gap:.78rem}.friend-avatar{width:3rem;height:3rem;border-radius:1rem;overflow:hidden;flex-shrink:0;background:linear-gradient(135deg,#bae6fd,#d9f99d);box-shadow:0 8px 18px rgba(148,163,184,.12)}.friend-avatar img{width:100%;height:100%;object-fit:cover;display:block}.friend-name{margin:0;font-size:.98rem;color:#1e293b;font-weight:900;line-height:1.2}
-  .friend-desc{margin:.72rem 0 0;color:#64748b;font-size:.86rem;line-height:1.72;font-weight:600;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}.friend-tags{margin-top:.72rem;display:flex;flex-wrap:wrap;gap:.42rem}.friend-tag{background:var(--friend-tint);color:var(--friend-text)}.friend-foot{margin-top:.82rem;display:flex;justify-content:space-between;align-items:center;gap:.8rem}.friend-link{display:inline-flex;align-items:center;gap:.45rem;padding:.52rem .82rem;border-radius:999px;background:rgba(255,255,255,.74);color:#1e293b;font-size:.78rem;font-weight:900;box-shadow:0 10px 24px rgba(148,163,184,.12);transition:transform .2s ease,background .2s ease}.friend-link:hover{transform:translateY(-2px);background:#fff}.friend-pulse{width:.58rem;height:.58rem;border-radius:999px;background:var(--friend-text);box-shadow:0 0 0 .22rem var(--friend-tint)}
-  .friends-note{color:#94a3b8;font-size:.84rem;line-height:1.8;font-weight:700}.friends-exchange-copy{margin:0;color:#64748b;font-size:.92rem;line-height:1.85;font-weight:600}.friends-rules{margin-top:1rem;display:grid;gap:.6rem}.friends-rule{justify-content:flex-start;padding:.62rem .78rem;font-size:.8rem;font-weight:800}.friends-cta-wrap{margin-top:1rem;display:flex;flex-wrap:wrap;gap:.6rem}.friends-cta{padding:.62rem .9rem;font-size:.8rem;font-weight:900}.friends-empty{padding:.8rem 0 0;color:#94a3b8;font-size:.86rem;line-height:1.8;font-weight:700}
-  @media (max-width:1180px){.friends-grid{grid-template-columns:1fr}.friends-list{grid-template-columns:repeat(2,minmax(0,1fr))}} @media (max-width:768px){.friends-shell{padding:1rem}.friends-dock,.friends-status{position:relative;top:auto;left:auto;right:auto;margin-bottom:.85rem}.friends-dock{width:fit-content}.friends-grid{padding-top:.2rem}} @media (max-width:640px){.friends-dock{width:100%;justify-content:space-between;gap:.4rem}.dock-avatar,.dock-link{width:2.1rem;height:2.1rem}.friends-list{grid-template-columns:1fr}}
+  .friends-shell{position:relative;min-height:100vh;padding:1rem;overflow:hidden;--accent:<%= primaryColor %>;--accent-soft:<%= toRgba(primaryColor, 0.16) %>;--accent-ring:<%= toRgba(primaryColor, 0.28) %>}
+  .friends-shell::before,.friends-shell::after{content:"";position:absolute;inset:-12%;pointer-events:none}
+  .friends-shell::before{background:radial-gradient(circle at 14% 14%,rgba(255,255,255,.56),transparent 22%),radial-gradient(circle at 18% 84%,rgba(236,253,245,.44),transparent 24%),radial-gradient(circle at 84% 20%,var(--accent-soft),transparent 26%),radial-gradient(circle at 82% 78%,rgba(255,250,240,.4),transparent 26%);filter:blur(18px);opacity:.94}
+  .friends-shell::after{background:linear-gradient(180deg,rgba(255,255,255,.18),rgba(255,255,255,.06))}
+  .friends-dock,.friends-status{position:absolute;z-index:20}
+  .friends-dock{top:1rem;left:1rem;padding:.6rem .75rem;display:inline-flex;align-items:center;gap:.55rem}
+  .friends-status{top:1rem;right:1rem;min-width:12rem;padding:.75rem .95rem;display:flex;flex-direction:column;gap:.18rem}
+  .friends-status strong{font-size:.98rem;color:#1e293b;font-weight:800}.friends-status span{font-size:.76rem;color:#64748b;font-weight:700}.friends-status small{font-size:.72rem;color:#94a3b8;font-weight:700}
+  .dock-avatar,.dock-link{width:2.35rem;height:2.35rem;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;background:rgba(255,255,255,.66);color:#64748b;box-shadow:0 6px 18px rgba(148,163,184,.12);transition:transform .25s ease,background .25s ease,color .25s ease}
+  .dock-avatar img{width:1.8rem;height:1.8rem;border-radius:999px;object-fit:cover}.dock-link:hover,.dock-avatar:hover{transform:translateY(-2px);background:rgba(255,255,255,.82)}.dock-link.is-active{background:rgba(255,255,255,.84);color:#38bdf8}
+  .friends-grid{position:relative;z-index:1;width:min(1320px,100%);margin:0 auto;padding-top:5.2rem}.friends-main{display:flex;flex-direction:column;gap:1.35rem}
+  .friends-hero,.friends-panel{padding:1.45rem}.friends-hero{display:flex;flex-direction:column;align-items:center;gap:1.15rem;text-align:center;padding:2.15rem 1.5rem 1.75rem}
+  .friends-title{margin:0;font-size:clamp(2rem,3vw,2.8rem);line-height:1.04;color:#1e293b;font-weight:900;letter-spacing:-.03em}.friends-copy{margin:0;max-width:42rem;color:#64748b;font-size:.96rem;line-height:1.85;font-weight:600}
+  .friends-toolbar{width:min(860px,100%);display:flex;flex-direction:column;align-items:center;gap:1rem}
+  .friends-search{width:min(520px,100%);height:3.6rem;padding:0 1.2rem;border-radius:999px;display:flex;align-items:center;gap:.8rem;background:rgba(255,255,255,.64);border:1px solid rgba(255,255,255,.88);box-shadow:inset 0 1px 0 rgba(255,255,255,.72),0 10px 24px rgba(148,163,184,.1);transition:background .25s ease,box-shadow .25s ease,transform .25s ease}
+  .friends-search:focus-within{background:rgba(255,255,255,.82);box-shadow:inset 0 1px 0 rgba(255,255,255,.8),0 0 0 6px var(--accent-soft);transform:translateY(-1px)}
+  .friends-search i{font-size:1rem;color:#94a3b8}.friends-search input{width:100%;border:0;outline:0;background:transparent;font:inherit;font-size:.92rem;color:#334155}.friends-search input::placeholder{color:#94a3b8}
+  .friends-filters,.friends-cta-wrap{display:flex;flex-wrap:wrap;justify-content:center;gap:.65rem}.friend-tags{display:flex;flex-wrap:wrap;justify-content:flex-start;gap:.42rem}
+  .friends-filter-btn,.friend-tag,.friends-rule,.friends-cta{display:inline-flex;align-items:center;gap:.42rem;border-radius:999px;border:1px solid rgba(255,255,255,.88);background:rgba(255,255,255,.58);color:#475569;box-shadow:0 8px 20px rgba(148,163,184,.08);font-weight:800;transition:transform .22s ease,background .22s ease,color .22s ease,box-shadow .22s ease}
+  .friends-filter-btn{padding:.62rem 1.08rem;font-size:.82rem}.friends-filter-btn:hover,.friends-cta:hover{transform:translateY(-2px);background:rgba(255,255,255,.82);color:#334155}.friends-filter-btn.is-active{color:#fff;background:linear-gradient(135deg,var(--accent),#7dd3fc);box-shadow:0 12px 26px var(--accent-soft)}
+  .friend-tag{padding:.46rem .72rem;font-size:.76rem;box-shadow:inset 0 1px 0 rgba(255,255,255,.3);background:rgba(241,245,249,.78);color:#64748b}.friend-tag.is-category{background:var(--friend-tint);color:var(--friend-text)}
+  .friends-list{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1.25rem}
+  .friend-card{position:relative;min-height:228px;padding:1.45rem;display:flex;flex-direction:column;gap:.82rem;border-radius:2rem;border:1px solid rgba(255,255,255,.96);background:rgba(255,255,255,.72);box-shadow:0 18px 42px rgba(148,163,184,.1);overflow:hidden;isolation:isolate;transition:transform .28s ease,box-shadow .28s ease,background .28s ease}
+  .friend-card::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 100% 0,var(--friend-glow),transparent 42%),linear-gradient(160deg,rgba(255,255,255,.26),transparent 48%);z-index:-1;pointer-events:none}
+  .friend-card:hover,.friend-card:focus-visible{transform:translateY(-4px);background:rgba(255,255,255,.86);box-shadow:0 24px 48px rgba(148,163,184,.16)}.friend-card:focus-visible{outline:0;box-shadow:0 0 0 5px var(--accent-ring),0 24px 48px rgba(148,163,184,.16)}
+  .friend-card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem}.friend-head{display:grid;grid-template-columns:3.45rem minmax(0,1fr);align-items:start;gap:.82rem;min-width:0;flex:1}
+  .friend-avatar{width:3.45rem;height:3.45rem;border-radius:1rem;flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center;background:var(--friend-surface);border:1px solid rgba(255,255,255,.86);box-shadow:0 12px 26px rgba(148,163,184,.12);color:var(--friend-text);font-size:1.12rem;font-weight:900}.friend-avatar img{width:100%;height:100%;object-fit:cover;display:block}
+  .friend-title-wrap{min-width:0;width:100%}.friend-name{margin:0;font-size:1.05rem;line-height:1.2;color:#1e293b;font-weight:900}.friend-url{margin:.3rem 0 0;color:#94a3b8;font-size:.74rem;font-weight:700;line-height:1.4;word-break:break-all}
+  .friend-open{width:2rem;height:2rem;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;background:rgba(255,255,255,.74);color:#94a3b8;box-shadow:0 8px 18px rgba(148,163,184,.12);transition:transform .24s ease,color .24s ease,background .24s ease;flex-shrink:0}
+  .friend-card:hover .friend-open,.friend-card:focus-visible .friend-open{transform:translate(2px,-2px);color:var(--friend-text);background:rgba(255,255,255,.92)}
+  .friend-rating{display:flex;align-items:center;justify-content:flex-start;gap:.15rem;color:#fbbf24;font-size:.78rem}.friend-star.is-empty{color:#d6dbe3}.friend-star.is-half{background:linear-gradient(90deg,#fbbf24 50%,#d6dbe3 50%);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .friend-desc{margin:0;color:#64748b;font-size:.88rem;line-height:1.78;font-weight:600;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+  .friends-empty{padding:.8rem 0 0;color:#94a3b8;font-size:.86rem;line-height:1.8;font-weight:700;text-align:center}
+  @media (max-width:1180px){.friends-list{grid-template-columns:repeat(2,minmax(0,1fr))}}
+  @media (max-width:768px){.friends-shell{padding:1rem}.friends-dock,.friends-status{position:relative;top:auto;left:auto;right:auto;margin-bottom:.85rem}.friends-dock{width:fit-content}.friends-status{min-width:0}.friends-grid{padding-top:.2rem}.friends-hero{padding:1.6rem 1rem 1.35rem}.friend-card{min-height:0}}
+  @media (max-width:640px){.friends-dock{width:100%;justify-content:space-between;gap:.4rem}.dock-avatar,.dock-link{width:2.1rem;height:2.1rem}.friends-search{height:3.25rem;padding:0 1rem}.friends-list{grid-template-columns:1fr}}
 </style>
-<div class="friends-shell"><nav class="friends-dock glass-card" aria-label="Friends navigation"><a href="<%- resolveUrl(homeMenu.url || '/') %>" class="dock-avatar" aria-label="Home"><img src="<%- theme.avatar || '/images/avatar-cat.svg' %>" alt="avatar"></a><% dockLinks.forEach((item) => { %><a href="<%- resolveUrl(item.url) %>" class="dock-link <%= item.active ? 'is-active' : '' %>" aria-label="<%- item.label %>" title="<%- item.label %>"><i class="<%- item.icon %>"></i></a><% }) %></nav><section class="friends-status glass-card" aria-label="Friends summary"><strong><%- pageTitle %></strong><span><%- pageSubtitle %></span><small><%- `${friendItems.length} ${countLabel}` %></small></section><div class="friends-grid"><main class="friends-main"><section class="glass-card friends-hero"><span class="friends-kicker">Friend Links</span><h1 class="friends-title"><%- pageTitle %></h1><p class="friends-copy"><%- pageNote %></p><div class="friends-meta"><span class="friends-pill"><i class="fa-solid fa-link"></i><%- `${friendItems.length} Linked Sites` %></span><span class="friends-pill"><i class="fa-solid fa-heart"></i>Indie Web</span><span class="friends-pill"><i class="fa-solid fa-sparkles"></i>Same Theme, Different Stories</span></div></section><section class="glass-card friends-panel"><div class="friends-panel-head"><div><h2 class="friends-panel-title">Friend Cards</h2><span class="friends-panel-subtitle">Curated Links</span></div><span class="friends-panel-subtitle"><%- `${friendItems.length} Listed` %></span></div><% if (!friendItems.length) { %><div class="friends-empty">No friend links yet. Add entries under `friends.items` in your theme config to populate this page.</div><% } else { %><div class="friends-list"><% friendItems.forEach((item) => { %><article class="friend-card" style="--friend-tint: <%- item.accent.tint %>; --friend-text: <%- item.accent.text %>; --friend-glow: <%- item.accent.glow %>;"><div class="friend-head"><div class="friend-avatar"><% if (item.avatar) { %><img src="<%- item.avatar %>" alt="<%- item.name %>" loading="lazy"><% } %></div><div><h3 class="friend-name"><%- item.name %></h3></div></div><p class="friend-desc"><%- item.description %></p><div class="friend-tags"><% item.tags.forEach((tag) => { %><span class="friend-tag"><i class="fa-solid fa-hashtag"></i><%- tag %></span><% }) %></div><div class="friend-foot"><span class="friend-pulse" aria-hidden="true"></span><a class="friend-link" href="<%- item.url %>" target="_blank" rel="noopener">Visit Site <i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></article><% }) %></div><% } %></section></main><aside class="friends-side"><section class="glass-card friends-panel"><div class="friends-panel-head"><div><h2 class="friends-panel-title"><%- exchangeTitle %></h2><span class="friends-panel-subtitle">How To Join</span></div></div><p class="friends-exchange-copy"><%- exchangeCopy %></p><div class="friends-rules"><% exchangeRules.forEach((rule) => { %><div class="friends-rule"><i class="fa-solid fa-paperclip"></i><%- rule %></div><% }) %></div><div class="friends-cta-wrap"><% if (emailSocial.url) { %><a href="<%- emailSocial.url %>" class="friends-cta"><i class="fa-solid fa-envelope"></i>Contact By Email</a><% } %><a href="<%- resolveUrl(homeMenu.url || '/') %>" class="friends-cta"><i class="fa-solid fa-house"></i>Back Home</a></div></section></aside></div></div>
+<div class="friends-shell">
+  <nav class="friends-dock glass-card" aria-label="Friends navigation">
+    <a href="<%= resolveUrl(homeMenu.url || '/') %>" class="dock-avatar" aria-label="Home">
+      <img src="<%= resolveUrl(theme.avatar || '/images/avatar-cat.svg') %>" alt="avatar">
+    </a>
+    <% dockLinks.forEach((item) => { %>
+      <a href="<%= resolveUrl(item.url) %>" class="dock-link <%= item.active ? 'is-active' : '' %>" aria-label="<%= item.label %>" title="<%= item.label %>">
+        <i class="<%= item.icon %>"></i>
+      </a>
+    <% }) %>
+  </nav>
+
+  <section class="friends-status glass-card" aria-label="Friends summary">
+    <strong><%= pageTitle %></strong>
+    <span><%= pageSubtitle %></span>
+    <small><%= `${friendItems.length} ${countLabel}` %></small>
+  </section>
+
+  <div class="friends-grid">
+    <main class="friends-main">
+      <section class="friends-hero">
+        <h1 class="friends-title"><%= pageTitle %></h1>
+        <p class="friends-copy"><%= heroCopy %></p>
+        <div class="friends-toolbar">
+          <label class="friends-search" for="friendsSearchInput">
+            <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+            <input id="friendsSearchInput" type="text" placeholder="搜索资源、笔记或朋友..." aria-label="Search friends and resources">
+          </label>
+          <div class="friends-filters" id="friendsFilterGroup">
+            <% filters.forEach((filter) => { %>
+              <button class="friends-filter-btn <%= filter.key === 'all' ? 'is-active' : '' %>" type="button" data-filter="<%= filter.key %>" data-label="<%= filter.label %>"><%= filter.label %></button>
+            <% }) %>
+          </div>
+        </div>
+      </section>
+
+      <section class="friends-panel">
+
+        <% if (!friendItems.length) { %>
+          <div class="friends-empty">No friend links yet. Add entries under `friends.items` in your theme config to populate this page.</div>
+        <% } else { %>
+          <div class="friends-list" id="friendsCardGrid">
+            <% friendItems.forEach((item) => { %>
+              <a class="friend-card" href="<%= item.url %>" target="_blank" rel="noopener" data-category="<%= item.categoryKey %>" data-search="<%= item.searchText %>" style="--friend-tint:<%= item.accent.tint %>;--friend-text:<%= item.accent.text %>;--friend-glow:<%= item.accent.glow %>;--friend-surface:<%= item.accent.surface %>;" aria-label="访问 <%= item.name %>">
+                <div class="friend-card-top">
+                  <div class="friend-head">
+                    <div class="friend-avatar">
+                      <% if (item.avatar) { %>
+                        <img src="<%= item.avatar %>" alt="<%= item.name %>" loading="lazy">
+                      <% } else { %>
+                        <span><%= item.avatarText %></span>
+                      <% } %>
+                    </div>
+                    <div class="friend-title-wrap">
+                      <h3 class="friend-name"><%= item.name %></h3>
+                      <p class="friend-url"><%= item.displayUrl %></p>
+                    </div>
+                  </div>
+                  <span class="friend-open" aria-hidden="true"><i class="fa-solid fa-arrow-up-right-from-square"></i></span>
+                </div>
+                <div class="friend-rating" aria-label="Rating <%= item.rating %> out of 5">
+                  <% item.stars.forEach((state) => { %><span class="friend-star is-<%= state %>"><i class="fa-solid fa-star"></i></span><% }) %>
+                </div>
+                <div class="friend-tags">
+                  <% if (item.categoryLabel) { %><span class="friend-tag is-category"><%= item.categoryLabel %></span><% } %>
+                  <% item.tags.forEach((tag) => { %><span class="friend-tag"><%= tag %></span><% }) %>
+                </div>
+                <p class="friend-desc"><%= item.description %></p>
+              </a>
+            <% }) %>
+          </div>
+        <% } %>
+      </section>
+
+    </main>
+  </div>
+</div>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const searchInput = document.getElementById('friendsSearchInput');
+    const filterButtons = Array.from(document.querySelectorAll('.friends-filter-btn'));
+    const cards = Array.from(document.querySelectorAll('.friend-card'));
+    if (!filterButtons.length || !cards.length) return;
+
+    let activeFilter = 'all';
+    const applyFilters = () => {
+      const keyword = searchInput ? searchInput.value.trim().toLowerCase() : '';
+      let shown = 0;
+      cards.forEach((card) => {
+        const matchCategory = activeFilter === 'all' || (card.dataset.category || '') === activeFilter;
+        const matchKeyword = !keyword || (card.dataset.search || '').includes(keyword);
+        const visible = matchCategory && matchKeyword;
+        card.style.display = visible ? '' : 'none';
+        if (visible) shown += 1;
+      });
+    };
+
+    filterButtons.forEach((button) => {
+      button.addEventListener('click', () => {
+        activeFilter = button.dataset.filter || 'all';
+        filterButtons.forEach((item) => item.classList.toggle('is-active', item === button));
+        applyFilters();
+      });
+    });
+
+    if (searchInput) searchInput.addEventListener('input', applyFilters);
+    applyFilters();
+  });
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

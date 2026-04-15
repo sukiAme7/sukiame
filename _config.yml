@@ -1,4 +1,4 @@
-# Theme Configuration
+﻿# Theme Configuration
 avatar: /images/avatar-my.svg
 favicon: /images/favicon.ico
 
@@ -244,6 +244,17 @@ friends:
   icon: fa-solid fa-link
   count_label: Sites
   note: A few lovely places worth keeping close.
+  filters:
+    - key: all
+      label: 全部
+    - key: friend
+      label: 友链博客
+    - key: website
+      label: 实用网站
+    - key: tool
+      label: 工具推荐
+    - key: note
+      label: 学习笔记
   exchange_title: Link Exchange
   exchange_copy: If your site has its own style and a little warmth, I would love to exchange links.
   exchange_rules:
@@ -255,6 +266,8 @@ friends:
       url: https://github.com/sukiAme7
       avatar: /images/avatar-my.svg
       description: Rainy mood, code notes, and small web experiments.
+      category: friend
+      rating: 5
       tags:
         - Blog
         - Coding
@@ -263,10 +276,14 @@ friends:
       url: https://webvpn.nankai.edu.cn/https/77726476706e69737468656265737421f9f64cd22931665b7f01c7a99c406d36af/login?next=%2Fapi%2Fcas%2Flogin%3Fservice%3Dhttps%253A%252F%252Fwebvpn.nankai.edu.cn%252Flogin%253Fcas_login%253Dtrue
       avatar: https://bu.dusays.com/2025/09/16/68c90196b6246.jpg
       description: Web VPN
+      category: website
+      rating: 4.5
     - name: NK-GeniOS
       url: https://coze.nankai.edu.cn/
       avatar: https://bu.dusays.com/2026/01/15/69685fcd87310.png
       description: Nankai Coze Platform
+      category: tool
+      rating: 4.5
 
 # Features
 comments: false
@@ -297,3 +314,5 @@ post_copyright:
 # Stylings
 colors:
   primary: '#4ade80'
+
+
