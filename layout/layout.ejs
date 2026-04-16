@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -1626,7 +1626,7 @@
             document.body.classList.remove('is-page-leaving');
             root.classList.remove('is-page-entering');
 
-            const shell = document.querySelector('.home-shell, .blog-shell, .post-shell, .friends-shell, .photo-wall-shell, .guestbook-shell');
+            const shell = document.querySelector('.home-shell, .blog-shell, .post-shell, .note-shell, .friends-shell, .photo-wall-shell, .guestbook-shell');
             if (!shell) return;
 
             const transitionTargetsByShell = {
@@ -1652,6 +1652,12 @@
                     '.post-status',
                     '.post-hero',
                     '.post-panel'
+                ],
+                'note-shell': [
+                    '.note-dock',
+                    '.note-status',
+                    '.note-hero',
+                    '.note-panel'
                 ],
                 'friends-shell': [
                     '.friends-dock',
@@ -1683,6 +1689,7 @@
 
             const shouldAnimatePath = (pathname) => {
                 if (!pathname) return false;
+                if (pathname.startsWith('/notes')) return true;
                 if (pathname.startsWith('/friends')) return true;
                 if (pathname.startsWith('/archives')) return true;
                 if (pathname.startsWith('/categories')) return true;
@@ -1869,3 +1876,4 @@
     </script>
 </body>
 </html>
+
