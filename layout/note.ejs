@@ -460,17 +460,17 @@ const dockLinks = [
     white-space: pre;
   }
   .note-floating-toc {
-    position: relative;
-    top: auto;
-    z-index: 12;
-    width: 100%;
-    max-height: calc(100vh - 8.5rem);
-    opacity: 1;
-    visibility: visible;
-    transform: none;
-    transition: none;
-    pointer-events: auto;
-    align-self: start;
+    position: fixed;
+    top: 8.2rem;
+    right: max(1.25rem, calc((100vw - 1360px) / 2 + 0.5rem));
+    z-index: 36;
+    width: 300px;
+    max-width: calc(100vw - 2rem);
+    opacity: 0;
+    visibility: hidden;
+    transform: translate3d(0.9rem, 0, 0);
+    transition: opacity 0.24s ease, transform 0.24s ease, visibility 0.24s ease;
+    pointer-events: none;
   }
 
   .note-floating-toc.is-visible {
@@ -757,9 +757,17 @@ const dockLinks = [
         tocPanel.setAttribute('aria-hidden', 'true');
         return false;
       }
-      tocPanel.classList.add('is-visible');
-      tocPanel.setAttribute('aria-hidden', 'false');
-      return true;
+
+      const currentOffset = getScrollOffset();
+      const readingTop = getAbsoluteTop(noteReadingPanel);
+      const bodyTop = getAbsoluteTop(postBody);
+      const showAfter = Math.max(0, readingTop - window.innerHeight * 0.22);
+      const hideAfter = bodyTop + postBody.offsetHeight - window.innerHeight * 0.42;
+      const visible = currentOffset >= showAfter && currentOffset <= hideAfter;
+
+      tocPanel.classList.toggle('is-visible', visible);
+      tocPanel.setAttribute('aria-hidden', visible ? 'false' : 'true');
+      return visible;
     };
 
     let activeId = '';
