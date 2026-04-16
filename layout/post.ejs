@@ -1,4 +1,4 @@
-<%
+﻿<%
 const toArray = (collection) => {
   if (!collection) return [];
   if (Array.isArray(collection)) return collection;
@@ -9,6 +9,7 @@ const categories = toArray(page.categories);
 const tags = toArray(page.tags);
 const photoWallConfig = theme.photo_wall || {};
 const guestbookConfig = theme.guestbook || {};
+const friendsConfig = theme.friends || {};
 const resolveUrl = (value) => {
   const link = value || '#';
   return /^(?:[a-z][a-z0-9+.-]*:)?\/\//i.test(link) || /^(#|mailto:|tel:)/i.test(link) ? link : url_for(link);
@@ -38,12 +39,14 @@ const postWordCount = countWords(page.content || '');
 const postWordCountLabel = `${formatCount(postWordCount)} Words`;
 const homeMenu = getEntry(theme.menu, 'Home');
 const archiveMenu = getEntry(theme.menu, 'Archives');
+const friendsMenu = getEntry(theme.menu, 'Friends');
 const guestbookMenu = getEntry(theme.menu, 'Guestbook');
 const dockLinks = [
   { label: homeMenu.label || 'Home', url: homeMenu.url || '/', icon: homeMenu.icon || 'fa-solid fa-house' },
   { label: archiveMenu.label || 'Blog', url: archiveMenu.url || '/archives/', icon: archiveMenu.icon || 'fa-solid fa-feather-pointed', active: true },
-  photoWallConfig.url ? { label: photoWallConfig.title || 'Photo Wall', url: photoWallConfig.url, icon: photoWallConfig.icon || 'fa-solid fa-image' } : null,
-  guestbookMenu.url && guestbookMenu.url !== '#' ? { label: guestbookMenu.label || 'Guestbook', url: guestbookMenu.url, icon: guestbookMenu.icon || guestbookConfig.icon || 'fa-solid fa-message' } : null
+  friendsMenu.url && friendsMenu.url !== '#' ? { label: friendsMenu.label || friendsConfig.title || 'Friends', url: friendsMenu.url, icon: friendsMenu.icon || friendsConfig.icon || 'fa-solid fa-link' } : { label: friendsConfig.title || 'Friends', url: friendsConfig.url || '/friends/', icon: friendsConfig.icon || 'fa-solid fa-link' },
+  guestbookMenu.url && guestbookMenu.url !== '#' ? { label: guestbookMenu.label || 'Guestbook', url: guestbookMenu.url, icon: guestbookMenu.icon || guestbookConfig.icon || 'fa-solid fa-message' } : null,
+  photoWallConfig.url ? { label: photoWallConfig.title || 'Photo Wall', url: photoWallConfig.url, icon: photoWallConfig.icon || 'fa-solid fa-image' } : null
 ].filter(Boolean);
 
 const codeBlocksConfig = theme.code_blocks || {};
@@ -1852,3 +1855,7 @@ const postCopyrightInfo = pickValue(pageCopyrightConfig.info, page.copyright_inf
     });
   })();
 </script>
+
+
+
+

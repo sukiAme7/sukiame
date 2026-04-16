@@ -1,9 +1,9 @@
-<% const guestbookConfig=theme.guestbook || {}; const boardTitle=guestbookConfig.page_title || guestbookConfig.title ||
+﻿<% const guestbookConfig=theme.guestbook || {}; const boardTitle=guestbookConfig.page_title || guestbookConfig.title ||
     page.title || 'Guestbook' ; const boardSubtitle=guestbookConfig.page_subtitle || guestbookConfig.subtitle
     || 'Little Notes' ; const boardIcon=guestbookConfig.icon || 'fa-solid fa-message' ; const
     boardNote=guestbookConfig.note || 'A sky of sticky notes, each one carrying a little warmth.' ; const
     boardCountLabel=guestbookConfig.count_label || 'Notes' ; const composerConfig=guestbookConfig.composer || {}; const
-    photoWallConfig=theme.photo_wall || {}; const resolveUrl=(value)=> {
+    photoWallConfig=theme.photo_wall || {}; const friendsConfig=theme.friends || {}; const resolveUrl=(value)=> {
     const link = value || '#';
     return /^(?:[a-z][a-z0-9+.-]*:)?\/\//i.test(link) || /^(#|mailto:|tel:)/i.test(link)
     ? link
@@ -17,6 +17,7 @@
 
     const homeMenu = getEntry(theme.menu, 'Home');
     const archiveMenu = getEntry(theme.menu, 'Archives');
+    const friendsMenu = getEntry(theme.menu, 'Friends');
     const guestbookMenu = getEntry(theme.menu, 'Guestbook');
 
     const dockLinks = [
@@ -30,19 +31,30 @@
     url: archiveMenu.url || '/archives/',
     icon: archiveMenu.icon || 'fa-solid fa-feather-pointed'
     },
+    friendsMenu.url && friendsMenu.url !== '#'
+    ? {
+    label: friendsMenu.label || friendsConfig.title || 'Friends',
+    url: friendsMenu.url,
+    icon: friendsMenu.icon || friendsConfig.icon || 'fa-solid fa-link'
+    }
+    : {
+    label: friendsConfig.title || 'Friends',
+    url: friendsConfig.url || '/friends/',
+    icon: friendsConfig.icon || 'fa-solid fa-link'
+    },
+    {
+    label: guestbookMenu.label || boardTitle,
+    url: guestbookMenu.url && guestbookMenu.url !== '#' ? guestbookMenu.url : '/guestbook/',
+    icon: guestbookMenu.icon || boardIcon,
+    active: true
+    },
     photoWallConfig.url
     ? {
     label: photoWallConfig.title || 'Photo Wall',
     url: photoWallConfig.url,
     icon: photoWallConfig.icon || 'fa-solid fa-image'
     }
-    : null,
-    {
-    label: guestbookMenu.label || boardTitle,
-    url: guestbookMenu.url && guestbookMenu.url !== '#' ? guestbookMenu.url : '/guestbook/',
-    icon: guestbookMenu.icon || boardIcon,
-    active: true
-    }
+    : null
     ].filter(Boolean);
 
     const tonePalette = {
@@ -1476,3 +1488,4 @@
             loadRemoteNotes();
         })();
     </script>
+

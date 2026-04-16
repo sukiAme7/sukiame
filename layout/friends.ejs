@@ -88,6 +88,7 @@ const friendItems = rawItems.map((entry, index) => {
     rating,
     stars: Array.from({ length: 5 }, (_, starIndex) => rating >= starIndex + 1 ? 'full' : rating >= starIndex + 0.5 ? 'half' : 'empty'),
     displayUrl: simplifyUrl(item.url_label || rawUrl || '#'),
+    isExternal: /^(?:[a-z][a-z0-9+.-]*:)?\/\//i.test(rawUrl) || /^(mailto:|tel:)/i.test(rawUrl),
     searchText: `${item.name || ''} ${item.description || ''} ${rawUrl} ${categoryLabel} ${detailTags.join(' ')}`.toLowerCase(),
     accent: accentPalette[accentKey]
   };
@@ -100,9 +101,9 @@ const photoWallConfig = theme.photo_wall || {};
 const dockLinks = [
   { label: homeMenu.label || 'Home', url: homeMenu.url || '/', icon: homeMenu.icon || 'fa-solid fa-house' },
   { label: archiveMenu.label || 'Blog', url: archiveMenu.url || '/archives/', icon: archiveMenu.icon || 'fa-solid fa-feather-pointed' },
-  photoWallConfig.url ? { label: photoWallConfig.title || 'Photo Wall', url: photoWallConfig.url, icon: photoWallConfig.icon || 'fa-solid fa-image' } : null,
+  { label: pageTitle, url: friendsConfig.url || '/friends/', icon: pageIcon, active: true },
   guestbookMenu.url && guestbookMenu.url !== '#' ? { label: guestbookMenu.label || 'Guestbook', url: guestbookMenu.url, icon: guestbookMenu.icon || 'fa-solid fa-message' } : null,
-  { label: pageTitle, url: friendsConfig.url || '/friends/', icon: pageIcon, active: true }
+  photoWallConfig.url ? { label: photoWallConfig.title || 'Photo Wall', url: photoWallConfig.url, icon: photoWallConfig.icon || 'fa-solid fa-image' } : null
 ].filter(Boolean);
 %>
 <style>
@@ -186,7 +187,7 @@ const dockLinks = [
         <% } else { %>
           <div class="friends-list" id="friendsCardGrid">
             <% friendItems.forEach((item) => { %>
-              <a class="friend-card" href="<%= item.url %>" target="_blank" rel="noopener" data-category="<%= item.categoryKey %>" data-search="<%= item.searchText %>" style="--friend-tint:<%= item.accent.tint %>;--friend-text:<%= item.accent.text %>;--friend-glow:<%= item.accent.glow %>;--friend-surface:<%= item.accent.surface %>;" aria-label="访问 <%= item.name %>">
+              <a class="friend-card" href="<%= item.url %>" <% if (item.isExternal) { %>target="_blank" rel="noopener"<% } %> data-category="<%= item.categoryKey %>" data-search="<%= item.searchText %>" style="--friend-tint:<%= item.accent.tint %>;--friend-text:<%= item.accent.text %>;--friend-glow:<%= item.accent.glow %>;--friend-surface:<%= item.accent.surface %>;" aria-label="访问 <%= item.name %>">
                 <div class="friend-card-top">
                   <div class="friend-head">
                     <div class="friend-avatar">
@@ -198,7 +199,7 @@ const dockLinks = [
                     </div>
                     <div class="friend-title-wrap">
                       <h3 class="friend-name"><%= item.name %></h3>
-                      <p class="friend-url"><%= item.displayUrl %></p>
+                      <p class="friend-url"><%= item.displayUrl || simplifyUrl(item.url || '#') %></p>
                     </div>
                   </div>
                   <span class="friend-open" aria-hidden="true"><i class="fa-solid fa-arrow-up-right-from-square"></i></span>
@@ -252,6 +253,13 @@ const dockLinks = [
     applyFilters();
   });
 </script>
+
+
+
+
+
+
+
 
 
 

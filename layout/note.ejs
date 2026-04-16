@@ -71,8 +71,8 @@ const dockLinks = [
   { label: homeMenu.label || 'Home', url: homeMenu.url || '/', icon: homeMenu.icon || 'fa-solid fa-house' },
   { label: noteArchiveLabel, url: noteArchiveUrl, icon: archiveMenu.icon || 'fa-solid fa-feather-pointed' },
   noteBackUrl ? { label: noteBackLabel, url: noteBackUrl, icon: friendsMenu.icon || (friendsConfig.icon || 'fa-solid fa-link'), active: true } : null,
-  photoWallConfig.url ? { label: photoWallConfig.title || 'Photo Wall', url: photoWallConfig.url, icon: photoWallConfig.icon || 'fa-solid fa-image' } : null,
-  guestbookMenu.url && guestbookMenu.url !== '#' ? { label: guestbookMenu.label || 'Guestbook', url: guestbookMenu.url, icon: guestbookMenu.icon || guestbookConfig.icon || 'fa-solid fa-message' } : null
+  guestbookMenu.url && guestbookMenu.url !== '#' ? { label: guestbookMenu.label || 'Guestbook', url: guestbookMenu.url, icon: guestbookMenu.icon || guestbookConfig.icon || 'fa-solid fa-message' } : null,
+  photoWallConfig.url ? { label: photoWallConfig.title || 'Photo Wall', url: photoWallConfig.url, icon: photoWallConfig.icon || 'fa-solid fa-image' } : null
 ].filter(Boolean);
 %>
 <style>
@@ -184,17 +184,26 @@ const dockLinks = [
   .note-grid {
     position: relative;
     z-index: 1;
-    width: min(1380px, 100%);
+    width: min(1360px, 100%);
     margin: 0 auto;
     padding-top: 5.15rem;
+    display: grid;
+    grid-template-columns: minmax(0, 940px) minmax(280px, 300px);
+    justify-content: center;
+    gap: 1.35rem 1.8rem;
+    align-items: start;
   }
 
   .note-main {
-    width: min(980px, 100%);
-    margin: 0 auto;
+    min-width: 0;
     display: flex;
     flex-direction: column;
     gap: 1.35rem;
+  }
+
+  .note-aside {
+    min-width: 0;
+    position: relative;
   }
 
   .note-panel,
@@ -247,8 +256,7 @@ const dockLinks = [
     font-weight: 500;
   }
 
-  .note-meta,
-  .note-actions {
+  .note-meta {
     display: flex;
     flex-wrap: wrap;
     gap: 0.62rem;
@@ -256,8 +264,7 @@ const dockLinks = [
   }
 
   .note-pill,
-  .note-chip,
-  .note-action {
+  .note-chip {
     display: inline-flex;
     align-items: center;
     gap: 0.42rem;
@@ -272,7 +279,6 @@ const dockLinks = [
     transition: transform 0.22s ease, background 0.22s ease, color 0.22s ease;
   }
 
-  .note-action:hover,
   .note-chip:hover {
     background: rgba(255, 255, 255, 0.96);
     transform: translateY(-2px);
@@ -454,17 +460,17 @@ const dockLinks = [
     white-space: pre;
   }
   .note-floating-toc {
-    position: fixed;
-    top: 8.2rem;
-    right: max(1.25rem, calc((100vw - 1380px) / 2 + 0.6rem));
-    z-index: 36;
-    width: 320px;
-    max-width: calc(100vw - 2rem);
+    position: sticky;
+    top: 7rem;
+    z-index: 12;
+    width: 100%;
+    max-height: calc(100vh - 8.5rem);
     opacity: 0;
     visibility: hidden;
-    transform: translate3d(0.9rem, 0, 0);
+    transform: translate3d(0.6rem, 0, 0);
     transition: opacity 0.24s ease, transform 0.24s ease, visibility 0.24s ease;
     pointer-events: none;
+    align-self: start;
   }
 
   .note-floating-toc.is-visible {
@@ -560,8 +566,12 @@ const dockLinks = [
   }
 
   @media (max-width: 1320px) {
+    .note-grid {
+      width: min(980px, 100%);
+      grid-template-columns: 1fr;
+    }
+    .note-aside { display: none; }
     .note-floating-toc { display: none; }
-    .note-grid { width: min(1020px, 100%); }
   }
 
   @media (max-width: 768px) {
@@ -637,10 +647,6 @@ const dockLinks = [
           <% categories.forEach((item) => { %><a href="<%- url_for(item.path) %>" class="note-chip"><i class="fa-solid fa-folder-open"></i><%- item.name %></a><% }) %>
           <% tags.forEach((item) => { %><a href="<%- url_for(item.path) %>" class="note-chip"><i class="fa-solid fa-hashtag"></i><%- item.name %></a><% }) %>
         </div>
-        <div class="note-actions">
-          <a href="<%- resolveUrl(noteBackUrl) %>" class="note-action"><i class="fa-solid fa-arrow-left"></i><span><%- noteBackLabel %></span></a>
-          <a href="<%- resolveUrl(noteArchiveUrl) %>" class="note-action"><span><%- noteArchiveLabel %></span><i class="fa-solid fa-arrow-right"></i></a>
-        </div>
         <% if (noteShowCover && noteCover) { %>
           <div class="note-cover"><img src="<%- noteCover %>" alt="<%- page.title %>" loading="lazy"></div>
         <% } %>
@@ -650,19 +656,21 @@ const dockLinks = [
         <div class="post-body"><%- page.content %></div>
       </article>
     </main>
+
+    <aside class="note-aside" aria-hidden="true">
+      <nav class="note-floating-toc toc-box style-1" data-note-floating-toc aria-label="Table of contents" aria-hidden="true">
+        <div class="toc-header">
+          <div class="toc-title-wrap">
+            <i class="fa-solid fa-list"></i>
+            <span>目录</span>
+          </div>
+          <div class="toc-percent" data-toc-percent>0%</div>
+        </div>
+        <ul class="toc-list" data-toc-list></ul>
+      </nav>
+    </aside>
   </div>
 </div>
-
-<nav class="note-floating-toc toc-box style-1" data-note-floating-toc aria-label="Table of contents" aria-hidden="true">
-  <div class="toc-header">
-    <div class="toc-title-wrap">
-      <i class="fa-solid fa-list"></i>
-      <span>目录</span>
-    </div>
-    <div class="toc-percent" data-toc-percent>0%</div>
-  </div>
-  <ul class="toc-list" data-toc-list></ul>
-</nav>
 
 <script>
   (() => {
@@ -814,3 +822,9 @@ const dockLinks = [
     window.addEventListener('resize', requestRefresh);
   })();
 </script>
+
+
+
+
+
+
