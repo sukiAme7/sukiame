@@ -74,6 +74,18 @@ const dockLinks = [
   guestbookMenu.url && guestbookMenu.url !== '#' ? { label: guestbookMenu.label || 'Guestbook', url: guestbookMenu.url, icon: guestbookMenu.icon || guestbookConfig.icon || 'fa-solid fa-message' } : null,
   photoWallConfig.url ? { label: photoWallConfig.title || 'Photo Wall', url: photoWallConfig.url, icon: photoWallConfig.icon || 'fa-solid fa-image' } : null
 ].filter(Boolean);
+const codeBlocksConfig = theme.code_blocks || {};
+const normalizeThemeValue = String(codeBlocksConfig.theme || 'light').trim().toLowerCase();
+const codeBlockTheme = ['darker', 'pale night', 'light', 'ocean', 'false'].includes(normalizeThemeValue) ? normalizeThemeValue : 'light';
+const codeBlockThemeClass = codeBlockTheme === 'false' ? 'plain' : codeBlockTheme.replace(/\s+/g, '-');
+const codeBlockMacStyle = !!codeBlocksConfig.macStyle;
+const codeBlockHeightLimitRaw = Number(codeBlocksConfig.height_limit);
+const codeBlockHeightLimit = Number.isFinite(codeBlockHeightLimitRaw) && codeBlockHeightLimitRaw > 0 ? codeBlockHeightLimitRaw : 0;
+const codeBlockWordWrap = !!codeBlocksConfig.word_wrap;
+const codeBlockCopy = codeBlocksConfig.copy !== false;
+const codeBlockLanguage = codeBlocksConfig.language !== false;
+const codeBlockShrinkMode = codeBlocksConfig.shrink === true ? 'collapsed' : (codeBlocksConfig.shrink === 'none' ? 'none' : 'expanded');
+const codeBlockFullpage = !!codeBlocksConfig.fullpage;
 %>
 <style>
   .note-shell {
@@ -425,13 +437,150 @@ const dockLinks = [
     color: #24364d;
     font-weight: 700;
   }
-  .post-body figure.highlight {
+  .post-body .code-block-enhanced {
+    --code-block-bg: #f8fbff;
+    --code-block-border: rgba(206, 223, 238, 0.95);
+    --code-toolbar-bg: linear-gradient(180deg, #eef3f8 0%, #e8eef5 100%);
+    --code-toolbar-border: rgba(210, 223, 236, 0.96);
+    --code-toolbar-text: #75889d;
+    --code-toolbar-muted: #8ea2b6;
+    --code-block-text: #44586d;
+    --code-block-gutter: #b8c7d6;
+    --code-block-line: #e3ebf3;
+    position: relative;
     margin: 1.55rem 0;
-    border: 1px solid rgba(206, 223, 238, 0.95);
-    border-radius: 0.9rem;
-    background: linear-gradient(180deg, #fbfdff 0%, #f8fbff 100%);
+    border: 1px solid var(--code-block-border);
+    border-radius: 0;
+    background: linear-gradient(180deg, #fbfdff 0%, var(--code-block-bg) 100%);
     box-shadow: 0 10px 26px rgba(199, 213, 226, 0.42);
     overflow: hidden;
+  }
+  .post-body[data-code-theme="darker"] .code-block-enhanced {
+    --code-block-bg: #0f172a;
+    --code-block-border: rgba(71, 85, 105, 0.8);
+    --code-toolbar-bg: #111827;
+    --code-toolbar-border: rgba(51, 65, 85, 0.9);
+    --code-toolbar-text: #e2e8f0;
+    --code-toolbar-muted: #94a3b8;
+    --code-block-text: #e5eef9;
+    --code-block-gutter: #64748b;
+    --code-block-line: rgba(51, 65, 85, 0.85);
+  }
+  .post-body[data-code-theme="pale-night"] .code-block-enhanced {
+    --code-block-bg: #1e293b;
+    --code-block-border: rgba(99, 102, 241, 0.28);
+    --code-toolbar-bg: #243247;
+    --code-toolbar-border: rgba(71, 85, 105, 0.95);
+    --code-toolbar-text: #e2e8f0;
+    --code-toolbar-muted: #a5b4fc;
+    --code-block-text: #e6edf7;
+    --code-block-gutter: #94a3b8;
+    --code-block-line: rgba(71, 85, 105, 0.7);
+  }
+  .post-body[data-code-theme="ocean"] .code-block-enhanced {
+    --code-block-bg: #082f49;
+    --code-block-border: rgba(34, 211, 238, 0.32);
+    --code-toolbar-bg: #0f3f64;
+    --code-toolbar-border: rgba(12, 74, 110, 0.95);
+    --code-toolbar-text: #ecfeff;
+    --code-toolbar-muted: #67e8f9;
+    --code-block-text: #e0f7ff;
+    --code-block-gutter: #7dd3fc;
+    --code-block-line: rgba(34, 211, 238, 0.26);
+  }
+  .post-body[data-code-theme="plain"] .code-block-enhanced {
+    --code-block-bg: rgba(15, 23, 42, 0.92);
+    --code-block-border: rgba(51, 65, 85, 0.9);
+    --code-toolbar-bg: rgba(15, 23, 42, 0.96);
+    --code-toolbar-border: rgba(51, 65, 85, 0.9);
+    --code-toolbar-text: #e2e8f0;
+    --code-toolbar-muted: #94a3b8;
+    --code-block-text: #e2e8f0;
+    --code-block-gutter: #94a3b8;
+    --code-block-line: rgba(51, 65, 85, 0.85);
+  }
+  .post-body .code-block-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    min-height: 2.75rem;
+    padding: 0.58rem 0.82rem;
+    border-bottom: 1px solid var(--code-toolbar-border);
+    background: var(--code-toolbar-bg);
+    color: var(--code-toolbar-text);
+  }
+  .post-body .code-block-dots {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+  .post-body .code-block-dot {
+    width: 0.74rem;
+    height: 0.74rem;
+    border-radius: 999px;
+    background: #ff6b6b;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  }
+  .post-body .code-block-dot:nth-child(2) { background: #f6bd2c; }
+  .post-body .code-block-dot:nth-child(3) { background: #39d98a; }
+  .post-body .code-block-language {
+    font-size: 0.74rem;
+    line-height: 1;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--code-toolbar-muted);
+  }
+  .post-body .code-block-toolbar-spacer { flex: 1; }
+  .post-body .code-block-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+  }
+  .post-body .code-block-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    width: 1.9rem;
+    height: 1.9rem;
+    padding: 0;
+    border-radius: 0.52rem;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--code-toolbar-text);
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+  }
+  .post-body[data-code-theme="light"] .code-block-button,
+  .post-body[data-code-theme="plain"] .code-block-button {
+    background: transparent;
+  }
+  .post-body .code-block-button span {
+    display: none;
+  }
+  .post-body .code-block-button:hover {
+    transform: translateY(-1px);
+    background: rgba(148, 163, 184, 0.14);
+    border-color: rgba(206, 223, 238, 0.9);
+  }
+  .post-body .code-block-button.is-success {
+    color: #2f9e6b;
+    border-color: rgba(101, 214, 173, 0.26);
+    background: rgba(101, 214, 173, 0.12);
+  }
+  .post-body .code-block-scroll { overflow: auto; }
+  .post-body .code-block-enhanced.has-height-limit .code-block-scroll { max-height: var(--code-block-max-height); }
+  .post-body .code-block-enhanced.is-collapsed .code-block-scroll { max-height: var(--code-block-collapsed-height); }
+  .post-body figure.highlight {
+    margin: 0;
+    padding: 0;
+    border-radius: 0;
+    background: transparent;
+    color: var(--code-block-text);
+    overflow: visible;
   }
   .post-body figure.highlight table {
     width: 100%;
@@ -442,22 +591,135 @@ const dockLinks = [
   .post-body figure.highlight .gutter {
     width: 2.9rem;
     padding: 0.84rem 0.75rem 0.84rem 0.95rem;
-    color: #b8c7d6;
+    color: var(--code-block-gutter);
+    background: rgba(255, 255, 255, 0.02);
     border-right: 1px solid rgba(227, 235, 243, 0.72);
     user-select: none;
   }
-  .post-body figure.highlight .code {
-    padding: 0.84rem 1.08rem 0.84rem 0.92rem;
-  }
+  .post-body figure.highlight .code { padding: 0.84rem 1.08rem 0.84rem 0.92rem; }
   .post-body figure.highlight pre {
     margin: 0;
     padding: 0;
     background: transparent;
     box-shadow: none;
-    color: #44586d;
+    color: var(--code-block-text);
+    font-family: 'JetBrains Mono', 'Cascadia Code', Consolas, 'Courier New', monospace;
     font-size: 0.91rem;
     line-height: 1.56;
     white-space: pre;
+  }
+  .post-body figure.highlight pre > br {
+    display: none;
+  }
+  .post-body .code-block-enhanced.is-wrap figure.highlight pre {
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .post-body .code-block-enhanced.is-wrap figure.highlight .line { white-space: pre-wrap; }
+  .post-body figure.highlight .line { display: block; min-height: 1.56em; }
+  .post-body[data-code-theme="light"] figure.highlight .comment,
+  .post-body[data-code-theme="light"] figure.highlight .quote {
+    color: #a7b7c8;
+  }
+  .post-body[data-code-theme="light"] figure.highlight .keyword,
+  .post-body[data-code-theme="light"] figure.highlight .selector-tag,
+  .post-body[data-code-theme="light"] figure.highlight .tag .name {
+    color: #6c63ff;
+  }
+  .post-body[data-code-theme="light"] figure.highlight .string,
+  .post-body[data-code-theme="light"] figure.highlight .doctag,
+  .post-body[data-code-theme="light"] figure.highlight .attr,
+  .post-body[data-code-theme="light"] figure.highlight .attribute {
+    color: #93b74b;
+  }
+  .post-body[data-code-theme="light"] figure.highlight .number,
+  .post-body[data-code-theme="light"] figure.highlight .literal,
+  .post-body[data-code-theme="light"] figure.highlight .params {
+    color: #f08b51;
+  }
+  .post-body[data-code-theme="light"] figure.highlight .built_in,
+  .post-body[data-code-theme="light"] figure.highlight .title,
+  .post-body[data-code-theme="light"] figure.highlight .section {
+    color: #27a9c8;
+  }
+  .post-body[data-code-theme="light"] figure.highlight .tag,
+  .post-body[data-code-theme="light"] figure.highlight .name,
+  .post-body[data-code-theme="light"] figure.highlight .selector-id,
+  .post-body[data-code-theme="light"] figure.highlight .selector-class {
+    color: #ff6b81;
+  }
+  .post-body[data-code-theme="light"] figure.highlight .meta,
+  .post-body[data-code-theme="light"] figure.highlight .symbol,
+  .post-body[data-code-theme="light"] figure.highlight .bullet,
+  .post-body[data-code-theme="light"] figure.highlight .link {
+    color: #5f93ff;
+  }
+  .post-body .code-block-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 1200;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+    background: rgba(15, 23, 42, 0.48);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+  .post-body .code-block-modal.is-open { display: flex; }
+  .post-body .code-block-modal-dialog {
+    width: min(960px, 100%);
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    border-radius: 1.1rem;
+    overflow: hidden;
+    border: 1px solid rgba(148, 163, 184, 0.22);
+    background: #0f172a;
+    box-shadow: 0 28px 60px rgba(15, 23, 42, 0.35);
+  }
+  .post-body .code-block-modal-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.8rem 1rem;
+    border-bottom: 1px solid rgba(51, 65, 85, 0.88);
+    background: #111827;
+    color: #e2e8f0;
+  }
+  .post-body .code-block-modal-head strong {
+    font-size: 0.78rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .post-body .code-block-modal-close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 0.7rem;
+    border: 1px solid transparent;
+    background: rgba(148, 163, 184, 0.12);
+    color: #e2e8f0;
+    transition: background 0.2s ease, transform 0.2s ease;
+  }
+  .post-body .code-block-modal-close:hover {
+    background: rgba(125, 211, 252, 0.18);
+    transform: translateY(-1px);
+  }
+  .post-body .code-block-modal-body {
+    padding: 1rem;
+    overflow: auto;
+  }
+  .post-body .code-block-modal-body pre {
+    margin: 0;
+    font-family: 'JetBrains Mono', 'Cascadia Code', Consolas, 'Courier New', monospace;
+    font-size: 0.92rem;
+    line-height: 1.75;
+    white-space: pre;
+    word-break: normal;
+    color: #e2e8f0;
   }
   .note-floating-toc {
     position: fixed;
@@ -653,7 +915,17 @@ const dockLinks = [
       </section>
 
       <article class="glass-card note-panel note-reading-panel">
-        <div class="post-body"><%- page.content %></div>
+        <div
+          class="post-body"
+          data-code-theme="<%- codeBlockThemeClass %>"
+          data-code-mac-style="<%- codeBlockMacStyle ? 'true' : 'false' %>"
+          data-code-height-limit="<%- codeBlockHeightLimit %>"
+          data-code-word-wrap="<%- codeBlockWordWrap ? 'true' : 'false' %>"
+          data-code-copy="<%- codeBlockCopy ? 'true' : 'false' %>"
+          data-code-language="<%- codeBlockLanguage ? 'true' : 'false' %>"
+          data-code-shrink-mode="<%- codeBlockShrinkMode %>"
+          data-code-fullpage="<%- codeBlockFullpage ? 'true' : 'false' %>"
+        ><%- page.content %></div>
       </article>
     </main>
 
@@ -822,6 +1094,213 @@ const dockLinks = [
     requestRefresh();
     window.addEventListener('scroll', requestRefresh, { passive: true });
     window.addEventListener('resize', requestRefresh);
+  })();
+</script>
+
+<script>
+  (() => {
+    const postBody = document.querySelector('.post-body');
+    if (!postBody) return;
+
+    const figures = Array.from(postBody.querySelectorAll('figure.highlight'));
+    if (!figures.length) return;
+
+    const config = {
+      theme: postBody.dataset.codeTheme || 'light',
+      macStyle: postBody.dataset.codeMacStyle === 'true',
+      heightLimit: Number(postBody.dataset.codeHeightLimit || 0),
+      wordWrap: postBody.dataset.codeWordWrap === 'true',
+      copy: postBody.dataset.codeCopy === 'true',
+      language: postBody.dataset.codeLanguage === 'true',
+      shrinkMode: postBody.dataset.codeShrinkMode || 'expanded',
+      fullpage: postBody.dataset.codeFullpage === 'true'
+    };
+
+    const formatLanguage = (lang) => {
+      const raw = String(lang || 'code').replace(/^language-/, '').replace(/_/g, '-').trim();
+      const aliases = {
+        js: 'JavaScript',
+        ts: 'TypeScript',
+        shell: 'Shell',
+        sh: 'Shell',
+        bash: 'Bash',
+        zsh: 'Zsh',
+        ps1: 'PowerShell',
+        powershell: 'PowerShell',
+        yml: 'YAML',
+        md: 'Markdown',
+        plaintext: 'Text'
+      };
+      return aliases[raw.toLowerCase()] || raw;
+    };
+
+    const createModal = () => {
+      const modal = document.createElement('div');
+      modal.className = 'code-block-modal';
+      modal.innerHTML = `
+        <div class="code-block-modal-dialog">
+          <div class="code-block-modal-head">
+            <strong>Code Preview</strong>
+            <button type="button" class="code-block-modal-close" aria-label="Close code preview">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+          <div class="code-block-modal-body"><pre><code></code></pre></div>
+        </div>
+      `;
+      const close = () => modal.classList.remove('is-open');
+      modal.addEventListener('click', (event) => {
+        if (event.target === modal || event.target.closest('.code-block-modal-close')) {
+          close();
+        }
+      });
+      window.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') close();
+      });
+      document.body.appendChild(modal);
+      return modal;
+    };
+
+    const modal = config.fullpage ? createModal() : null;
+
+    const copyText = async (value) => {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(value);
+        return;
+      }
+      const textarea = document.createElement('textarea');
+      textarea.value = value;
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.focus();
+      textarea.select();
+      document.execCommand('copy');
+      textarea.remove();
+    };
+
+    figures.forEach((figure) => {
+      if (figure.parentElement && figure.parentElement.classList.contains('code-block-scroll')) return;
+
+      const languageClass = Array.from(figure.classList).find((className) => className !== 'highlight') || 'code';
+      const languageLabel = formatLanguage(languageClass);
+      const wrapper = document.createElement('div');
+      const toolbar = document.createElement('div');
+      const spacer = document.createElement('div');
+      const actions = document.createElement('div');
+      const scroll = document.createElement('div');
+      const codeCell = figure.querySelector('td.code pre') || figure.querySelector('pre');
+      const codeText = codeCell ? codeCell.innerText.replace(/\u00a0/g, ' ').replace(/\n$/, '') : figure.innerText.trim();
+      const collapsedHeight = config.heightLimit > 0 ? config.heightLimit : 280;
+
+      wrapper.className = 'code-block-enhanced';
+      if (config.wordWrap) wrapper.classList.add('is-wrap');
+      if (config.heightLimit > 0) wrapper.classList.add('has-height-limit');
+      if (config.shrinkMode === 'collapsed') wrapper.classList.add('is-collapsed');
+      wrapper.style.setProperty('--code-block-max-height', `${config.heightLimit}px`);
+      wrapper.style.setProperty('--code-block-collapsed-height', `${collapsedHeight}px`);
+
+      toolbar.className = 'code-block-toolbar';
+      spacer.className = 'code-block-toolbar-spacer';
+      actions.className = 'code-block-actions';
+      scroll.className = 'code-block-scroll';
+
+      if (config.macStyle) {
+        const dots = document.createElement('span');
+        dots.className = 'code-block-dots';
+        dots.innerHTML = '<span class="code-block-dot"></span><span class="code-block-dot"></span><span class="code-block-dot"></span>';
+        toolbar.appendChild(dots);
+      }
+
+      if (config.language) {
+        const language = document.createElement('span');
+        language.className = 'code-block-language';
+        language.textContent = languageLabel;
+        toolbar.appendChild(language);
+      }
+
+      toolbar.appendChild(spacer);
+
+      if (config.copy) {
+        const copyButton = document.createElement('button');
+        copyButton.type = 'button';
+        copyButton.className = 'code-block-button';
+        copyButton.title = 'Copy code';
+        copyButton.setAttribute('aria-label', 'Copy code');
+        copyButton.innerHTML = '<i class="fa-regular fa-copy"></i><span>Copy</span>';
+        copyButton.addEventListener('click', async () => {
+          try {
+            await copyText(codeText);
+            copyButton.classList.add('is-success');
+            copyButton.title = 'Copied';
+            copyButton.setAttribute('aria-label', 'Copied');
+            copyButton.innerHTML = '<i class="fa-solid fa-check"></i><span>Copied</span>';
+            window.setTimeout(() => {
+              copyButton.classList.remove('is-success');
+              copyButton.title = 'Copy code';
+              copyButton.setAttribute('aria-label', 'Copy code');
+              copyButton.innerHTML = '<i class="fa-regular fa-copy"></i><span>Copy</span>';
+            }, 1400);
+          } catch (error) {
+            copyButton.title = 'Copy failed';
+            copyButton.setAttribute('aria-label', 'Copy failed');
+            copyButton.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i><span>Failed</span>';
+            window.setTimeout(() => {
+              copyButton.title = 'Copy code';
+              copyButton.setAttribute('aria-label', 'Copy code');
+              copyButton.innerHTML = '<i class="fa-regular fa-copy"></i><span>Copy</span>';
+            }, 1400);
+          }
+        });
+        actions.appendChild(copyButton);
+      }
+
+      if (config.shrinkMode !== 'none') {
+        const toggleButton = document.createElement('button');
+        toggleButton.type = 'button';
+        toggleButton.className = 'code-block-button';
+        const syncToggle = () => {
+          const collapsed = wrapper.classList.contains('is-collapsed');
+          toggleButton.title = collapsed ? 'Expand code' : 'Collapse code';
+          toggleButton.setAttribute('aria-label', collapsed ? 'Expand code' : 'Collapse code');
+          toggleButton.innerHTML = collapsed
+            ? '<i class="fa-solid fa-chevron-down"></i><span>Expand</span>'
+            : '<i class="fa-solid fa-chevron-up"></i><span>Collapse</span>';
+        };
+        toggleButton.addEventListener('click', () => {
+          wrapper.classList.toggle('is-collapsed');
+          syncToggle();
+        });
+        syncToggle();
+        actions.appendChild(toggleButton);
+      }
+
+      if (config.fullpage && modal) {
+        const fullpageButton = document.createElement('button');
+        fullpageButton.type = 'button';
+        fullpageButton.className = 'code-block-button';
+        fullpageButton.title = 'Open full view';
+        fullpageButton.setAttribute('aria-label', 'Open full view');
+        fullpageButton.innerHTML = '<i class="fa-solid fa-up-right-and-down-left-from-center"></i><span>Full</span>';
+        fullpageButton.addEventListener('click', () => {
+          const title = modal.querySelector('.code-block-modal-head strong');
+          const targetCode = modal.querySelector('code');
+          if (title) title.textContent = `${languageLabel} Code`;
+          if (targetCode) targetCode.textContent = codeText;
+          modal.classList.add('is-open');
+        });
+        actions.appendChild(fullpageButton);
+      }
+
+      if (actions.children.length) {
+        toolbar.appendChild(actions);
+      }
+
+      figure.parentNode.insertBefore(wrapper, figure);
+      wrapper.appendChild(toolbar);
+      wrapper.appendChild(scroll);
+      scroll.appendChild(figure);
+    });
   })();
 </script>
 
