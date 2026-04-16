@@ -460,16 +460,16 @@ const dockLinks = [
     white-space: pre;
   }
   .note-floating-toc {
-    position: sticky;
-    top: 7rem;
+    position: relative;
+    top: auto;
     z-index: 12;
     width: 100%;
     max-height: calc(100vh - 8.5rem);
-    opacity: 0;
-    visibility: hidden;
-    transform: translate3d(0.6rem, 0, 0);
-    transition: opacity 0.24s ease, transform 0.24s ease, visibility 0.24s ease;
-    pointer-events: none;
+    opacity: 1;
+    visibility: visible;
+    transform: none;
+    transition: none;
+    pointer-events: auto;
     align-self: start;
   }
 
@@ -757,15 +757,9 @@ const dockLinks = [
         tocPanel.setAttribute('aria-hidden', 'true');
         return false;
       }
-      const currentOffset = getScrollOffset();
-      const readingTop = getAbsoluteTop(noteReadingPanel);
-      const bodyTop = getAbsoluteTop(postBody);
-      const showAfter = Math.max(0, readingTop - window.innerHeight * 0.22);
-      const hideAfter = bodyTop + postBody.offsetHeight - window.innerHeight * 0.42;
-      const visible = currentOffset >= showAfter && currentOffset <= hideAfter;
-      tocPanel.classList.toggle('is-visible', visible);
-      tocPanel.setAttribute('aria-hidden', visible ? 'false' : 'true');
-      return visible;
+      tocPanel.classList.add('is-visible');
+      tocPanel.setAttribute('aria-hidden', 'false');
+      return true;
     };
 
     let activeId = '';
@@ -822,6 +816,7 @@ const dockLinks = [
     window.addEventListener('resize', requestRefresh);
   })();
 </script>
+
 
 
 
