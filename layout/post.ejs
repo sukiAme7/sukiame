@@ -531,7 +531,8 @@ const postCopyrightInfo = pickValue(pageCopyrightConfig.info, page.copyright_inf
     font-size: 1.08rem;
     line-height: 2.02;
     font-weight: 400;
-    word-break: break-word;
+    word-break: normal;
+    overflow-wrap: break-word;
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
   }
@@ -652,6 +653,8 @@ const postCopyrightInfo = pickValue(pageCopyrightConfig.info, page.copyright_inf
     padding: 0.78rem 0.9rem;
     border-bottom: 1px solid #e5edf5;
     text-align: left;
+    word-break: normal;
+    overflow-wrap: break-word;
   }
 
   .post-body th {
