@@ -22,7 +22,7 @@
                     snapshot.href === window.location.href &&
                     Date.now() - snapshot.at < 4000
                 ) {
-                    document.documentElement.classList.add('is-page-enter-prep');
+                    document.documentElement.classList.add('is-page-enter-prep', 'is-page-cursor-refresh');
                 }
             } catch (error) {}
         })();
@@ -95,7 +95,16 @@
 
         html.is-page-navigating,
         html.is-page-navigating body,
-        html.is-page-navigating body * {
+        html.is-page-navigating body *,
+        html.is-page-enter-prep,
+        html.is-page-enter-prep body,
+        html.is-page-enter-prep body *,
+        html.is-page-entering,
+        html.is-page-entering body,
+        html.is-page-entering body *,
+        html.is-page-cursor-refresh,
+        html.is-page-cursor-refresh body,
+        html.is-page-cursor-refresh body * {
             cursor: url("<%- url_for('/cursors/cur118.cur') %>"), auto !important;
         }
 
@@ -1810,6 +1819,18 @@
             const MAX_STAGGER_MS = 56;
             const NAVIGATION_DELAY_MS = prefersReducedMotion.matches ? 0 : 1000;
 
+            const releaseCursorRefresh = () => {
+                root.classList.remove('is-page-cursor-refresh');
+                window.removeEventListener('pointermove', releaseCursorRefresh);
+                window.removeEventListener('mousemove', releaseCursorRefresh);
+            };
+
+            const holdCursorUntilMove = () => {
+                root.classList.add('is-page-cursor-refresh');
+                window.addEventListener('pointermove', releaseCursorRefresh, { once: true, passive: true });
+                window.addEventListener('mousemove', releaseCursorRefresh, { once: true, passive: true });
+            };
+
             const afterNextPaint = (callback) => {
                 window.requestAnimationFrame(() => {
                     window.requestAnimationFrame(callback);
@@ -1901,6 +1922,8 @@
                 transitionSnapshot.href === window.location.href &&
                 Date.now() - transitionSnapshot.at < 4000
             ) {
+                holdCursorUntilMove();
+
                 afterNextPaint(() => {
                     root.classList.remove('is-page-enter-prep');
                     root.classList.add('is-page-entering');
@@ -1912,6 +1935,7 @@
                 }, ENTER_ANIMATION_MS + MAX_STAGGER_MS + 100);
             } else {
                 root.classList.remove('is-page-enter-prep');
+                releaseCursorRefresh();
             }
 
             let navigating = false;
