@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><%- page.title || config.title %></title>
     <link rel="icon" href="<%- /^(?:[a-z][a-z0-9+.-]*:)?\/\//i.test(theme.favicon || theme.avatar || '') ? (theme.favicon || theme.avatar) : url_for(theme.favicon || theme.avatar || '/images/avatar-cat.svg') %>">
+    <link rel="preload" as="image" type="image/x-icon" href="<%- url_for('/cursors/cur118.cur') %>">
     <link rel="alternate" type="application/atom+xml" title="<%- config.title || 'RSS Feed' %>" href="<%- url_for('/atom.xml') %>">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -22,7 +23,7 @@
                     snapshot.href === window.location.href &&
                     Date.now() - snapshot.at < 4000
                 ) {
-                    document.documentElement.classList.add('is-page-enter-prep', 'is-page-cursor-refresh');
+                    document.documentElement.classList.add('is-page-enter-prep', 'is-page-cursor-refresh', 'is-page-cursor-cover');
                 }
             } catch (error) {}
         })();
@@ -58,6 +59,10 @@
 
         * {
             box-sizing: border-box;
+        }
+
+        html {
+            cursor: url("<%- url_for('/cursors/cur118.cur') %>"), auto;
         }
 
         body {
@@ -105,6 +110,23 @@
         html.is-page-cursor-refresh,
         html.is-page-cursor-refresh body,
         html.is-page-cursor-refresh body * {
+            cursor: url("<%- url_for('/cursors/cur118.cur') %>"), auto !important;
+        }
+
+        .page-cursor-refresh-cover {
+            position: fixed;
+            inset: 0;
+            z-index: 2147483647;
+            background: transparent;
+            cursor: url("<%- url_for('/cursors/cur118.cur') %>"), auto !important;
+        }
+
+        html.is-page-cursor-cover::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            z-index: 2147483647;
+            background: transparent;
             cursor: url("<%- url_for('/cursors/cur118.cur') %>"), auto !important;
         }
 
@@ -1818,15 +1840,44 @@
             const ENTER_ANIMATION_MS = 640;
             const MAX_STAGGER_MS = 56;
             const NAVIGATION_DELAY_MS = prefersReducedMotion.matches ? 0 : 1000;
+            const CURSOR_REFRESH_COVER_MS = Math.min(ENTER_ANIMATION_MS + MAX_STAGGER_MS + 160, 900);
+            let cursorRefreshCover = null;
+            let cursorRefreshCoverTimer = 0;
+
+            const removeCursorRefreshCover = () => {
+                window.clearTimeout(cursorRefreshCoverTimer);
+                cursorRefreshCoverTimer = 0;
+                root.classList.remove('is-page-cursor-cover');
+
+                if (cursorRefreshCover) {
+                    cursorRefreshCover.remove();
+                    cursorRefreshCover = null;
+                }
+            };
+
+            const refreshCursorHitTest = () => {
+                removeCursorRefreshCover();
+                root.classList.add('is-page-cursor-cover');
+
+                const cover = document.createElement('div');
+                cover.className = 'page-cursor-refresh-cover';
+                cover.setAttribute('aria-hidden', 'true');
+                document.body.appendChild(cover);
+                cursorRefreshCover = cover;
+
+                cursorRefreshCoverTimer = window.setTimeout(removeCursorRefreshCover, CURSOR_REFRESH_COVER_MS);
+            };
 
             const releaseCursorRefresh = () => {
                 root.classList.remove('is-page-cursor-refresh');
+                removeCursorRefreshCover();
                 window.removeEventListener('pointermove', releaseCursorRefresh);
                 window.removeEventListener('mousemove', releaseCursorRefresh);
             };
 
             const holdCursorUntilMove = () => {
                 root.classList.add('is-page-cursor-refresh');
+                refreshCursorHitTest();
                 window.addEventListener('pointermove', releaseCursorRefresh, { once: true, passive: true });
                 window.addEventListener('mousemove', releaseCursorRefresh, { once: true, passive: true });
             };
@@ -1916,23 +1967,28 @@
                 }
             })();
 
-            if (
+            const hasRecentTransition =
                 transitionSnapshot &&
-                !prefersReducedMotion.matches &&
                 transitionSnapshot.href === window.location.href &&
-                Date.now() - transitionSnapshot.at < 4000
-            ) {
+                Date.now() - transitionSnapshot.at < 4000;
+
+            if (hasRecentTransition) {
                 holdCursorUntilMove();
 
-                afterNextPaint(() => {
-                    root.classList.remove('is-page-enter-prep');
-                    root.classList.add('is-page-entering');
-                });
+                if (!prefersReducedMotion.matches) {
+                    afterNextPaint(() => {
+                        root.classList.remove('is-page-enter-prep');
+                        root.classList.add('is-page-entering');
+                    });
 
-                window.setTimeout(() => {
+                    window.setTimeout(() => {
+                        root.classList.remove('is-page-entering');
+                        root.classList.remove('is-page-enter-prep');
+                    }, ENTER_ANIMATION_MS + MAX_STAGGER_MS + 100);
+                } else {
                     root.classList.remove('is-page-entering');
                     root.classList.remove('is-page-enter-prep');
-                }, ENTER_ANIMATION_MS + MAX_STAGGER_MS + 100);
+                }
             } else {
                 root.classList.remove('is-page-enter-prep');
                 releaseCursorRefresh();
