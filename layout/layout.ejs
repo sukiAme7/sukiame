@@ -17,40 +17,116 @@
         body * {
             cursor: var(--sukiame-cursor-default) !important;
         }
-
-        html.is-page-enter-prep,
-        html.is-page-enter-prep body,
-        html.is-page-enter-prep body *,
-        html.is-page-cursor-refresh,
-        html.is-page-cursor-refresh body,
-        html.is-page-cursor-refresh body * {
-            cursor: var(--sukiame-cursor-default) !important;
-        }
-
-        html.is-page-cursor-cover::before {
-            content: "";
-            position: fixed;
-            inset: 0;
-            z-index: 2147483647;
-            background: transparent;
-            cursor: var(--sukiame-cursor-default) !important;
-        }
     </style>
     <script>
         (() => {
-            try {
-                const raw = window.sessionStorage.getItem('sukiame-page-transition');
-                if (!raw) return;
+            if (window.__sukiamePageScope) return;
 
-                const snapshot = JSON.parse(raw);
-                if (
-                    snapshot &&
-                    snapshot.href === window.location.href &&
-                    Date.now() - snapshot.at < 4000
-                ) {
-                    document.documentElement.classList.add('is-page-enter-prep', 'is-page-cursor-refresh', 'is-page-cursor-cover');
+            const scope = {
+                active: false,
+                disposers: [],
+                originals: null
+            };
+
+            const addDisposer = (callback) => {
+                if (typeof callback === 'function') scope.disposers.push(callback);
+            };
+
+            const callListener = (listener, target, event) => {
+                if (typeof listener === 'function') {
+                    listener.call(target, event);
+                } else if (listener && typeof listener.handleEvent === 'function') {
+                    listener.handleEvent(event);
                 }
+            };
+
+            const end = () => {
+                if (!scope.active || !scope.originals) return;
+
+                EventTarget.prototype.addEventListener = scope.originals.addEventListener;
+                window.setInterval = scope.originals.setInterval;
+                scope.active = false;
+                scope.originals = null;
+            };
+
+            const begin = () => {
+                if (scope.active) return;
+
+                const originals = {
+                    addEventListener: EventTarget.prototype.addEventListener,
+                    removeEventListener: EventTarget.prototype.removeEventListener,
+                    setInterval: window.setInterval,
+                    clearInterval: window.clearInterval
+                };
+
+                scope.originals = originals;
+                scope.active = true;
+
+                EventTarget.prototype.addEventListener = function(type, listener, options) {
+                    originals.addEventListener.call(this, type, listener, options);
+
+                    if (listener) {
+                        const target = this;
+                        addDisposer(() => {
+                            originals.removeEventListener.call(target, type, listener, options);
+                        });
+                    }
+
+                    if (
+                        this === document &&
+                        type === 'DOMContentLoaded' &&
+                        document.readyState !== 'loading' &&
+                        listener
+                    ) {
+                        window.queueMicrotask(() => {
+                            callListener(listener, document, new Event('DOMContentLoaded'));
+                        });
+                    }
+                };
+
+                window.setInterval = function(handler, timeout, ...args) {
+                    const id = originals.setInterval.call(window, handler, timeout, ...args);
+                    addDisposer(() => originals.clearInterval.call(window, id));
+                    return id;
+                };
+            };
+
+            const clear = () => {
+                try {
+                    window.dispatchEvent(new CustomEvent('sukiame:page-unload'));
+                } catch (error) {}
+
+                end();
+
+                while (scope.disposers.length) {
+                    const dispose = scope.disposers.pop();
+                    try {
+                        dispose();
+                    } catch (error) {}
+                }
+
+                document.querySelectorAll('.code-block-modal').forEach((element) => {
+                    element.remove();
+                });
+
+                if (document.body) {
+                    document.body.classList.remove(
+                        'photo-wall-lightbox-open',
+                        'guestbook-lightbox-open',
+                        'guestbook-composer-open'
+                    );
+                }
+            };
+
+            try {
+                window.sessionStorage.removeItem('sukiame-page-transition');
             } catch (error) {}
+
+            window.__sukiameUsePjax = true;
+            window.__sukiamePageScope = { begin, end, clear };
+            window.__sukiameBeginPageScope = begin;
+            window.__sukiameEndPageScope = end;
+            window.__sukiameClearPageScope = clear;
         })();
     </script>
     <link rel="alternate" type="application/atom+xml" title="<%- config.title || 'RSS Feed' %>" href="<%- url_for('/atom.xml') %>">
@@ -136,27 +212,7 @@
         html.is-page-enter-prep body *,
         html.is-page-entering,
         html.is-page-entering body,
-        html.is-page-entering body *,
-        html.is-page-cursor-refresh,
-        html.is-page-cursor-refresh body,
-        html.is-page-cursor-refresh body * {
-            cursor: var(--sukiame-cursor-default) !important;
-        }
-
-        .page-cursor-refresh-cover {
-            position: fixed;
-            inset: 0;
-            z-index: 2147483647;
-            background: transparent;
-            cursor: var(--sukiame-cursor-default) !important;
-        }
-
-        html.is-page-cursor-cover::before {
-            content: "";
-            position: fixed;
-            inset: 0;
-            z-index: 2147483647;
-            background: transparent;
+        html.is-page-entering body * {
             cursor: var(--sukiame-cursor-default) !important;
         }
 
@@ -1530,7 +1586,11 @@
     </style>
 </head>
 <body>
-    <%- body %>
+    <script>window.__sukiameBeginPageScope && window.__sukiameBeginPageScope();</script>
+    <div id="sukiame-page-root" data-pjax-root>
+        <%- body %>
+    </div>
+    <script>window.__sukiameEndPageScope && window.__sukiameEndPageScope();</script>
     <% if (theme.visitor_counter && theme.visitor_counter.enable && (!theme.visitor_counter.provider || theme.visitor_counter.provider === 'busuanzi')) { %>
     <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
     <% } %>
@@ -1785,14 +1845,22 @@
             loadCount();
         })();
 
+    </script>
+    <script>
         (() => {
-            const root = document.documentElement;
-            document.body.classList.remove('is-page-leaving');
-            root.classList.remove('is-page-navigating');
-            root.classList.remove('is-page-entering');
+            if (window.__sukiamePjaxReady) return;
+            window.__sukiamePjaxReady = true;
 
-            const shell = document.querySelector('.home-shell, .blog-shell, .post-shell, .note-shell, .friends-shell, .photo-wall-shell, .guestbook-shell');
-            if (!shell) return;
+            const root = document.documentElement;
+            const pageRootSelector = '#sukiame-page-root';
+            const pageCache = new Map();
+            const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+            const EXIT_ANIMATION_MS = 1080;
+            const ENTER_ANIMATION_MS = 640;
+            const MAX_STAGGER_MS = 56;
+            const NAVIGATION_DELAY_MS = prefersReducedMotion.matches ? 0 : 1000;
+            let navigating = false;
+            let navigationSerial = 0;
 
             const transitionTargetsByShell = {
                 'home-shell': [
@@ -1842,99 +1910,20 @@
                 ]
             };
 
-            const activeTargetSelector = Object.entries(transitionTargetsByShell)
-                .find(([className]) => shell.classList.contains(className))?.[1]?.join(', ');
+            const transientRootClasses = [
+                'is-page-navigating',
+                'is-page-enter-prep',
+                'is-page-entering'
+            ];
 
-            if (!activeTargetSelector) return;
+            const transientBodyClasses = [
+                'is-page-leaving',
+                'photo-wall-lightbox-open',
+                'guestbook-lightbox-open',
+                'guestbook-composer-open'
+            ];
 
-            const targets = Array.from(shell.querySelectorAll(activeTargetSelector))
-                .filter((element) => !element.closest('.photo-wall-lightbox, .guestbook-lightbox, .guestbook-composer'));
-
-            if (!targets.length) return;
-
-            const shouldAnimatePath = (pathname) => {
-                if (!pathname) return false;
-                if (pathname.startsWith('/notes')) return true;
-                if (pathname.startsWith('/friends')) return true;
-                if (pathname.startsWith('/archives')) return true;
-                if (pathname.startsWith('/categories')) return true;
-                if (pathname.startsWith('/tags')) return true;
-                if (/^\/\d{4}\//.test(pathname)) return true;
-                return false;
-            };
-
-            const prefetched = new Set();
-            const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-            const TRANSITION_STORAGE_KEY = 'sukiame-page-transition';
-            const EXIT_ANIMATION_MS = 1080;
-            const ENTER_ANIMATION_MS = 640;
-            const MAX_STAGGER_MS = 56;
-            const NAVIGATION_DELAY_MS = prefersReducedMotion.matches ? 0 : 1000;
-            const CURSOR_REFRESH_COVER_MS = Math.min(ENTER_ANIMATION_MS + MAX_STAGGER_MS + 160, 900);
-            let cursorRefreshCover = null;
-            let cursorRefreshCoverTimer = 0;
-            let cursorRefreshReleaseTimer = 0;
-
-            const storeTransitionSnapshot = (href) => {
-                if (!href) return;
-
-                try {
-                    window.sessionStorage.setItem(TRANSITION_STORAGE_KEY, JSON.stringify({
-                        href,
-                        at: Date.now()
-                    }));
-                } catch (error) {}
-            };
-
-            const removeCursorRefreshCover = () => {
-                window.clearTimeout(cursorRefreshCoverTimer);
-                cursorRefreshCoverTimer = 0;
-                root.classList.remove('is-page-cursor-cover');
-
-                if (cursorRefreshCover) {
-                    cursorRefreshCover.remove();
-                    cursorRefreshCover = null;
-                }
-            };
-
-            const refreshCursorHitTest = () => {
-                removeCursorRefreshCover();
-                root.classList.add('is-page-cursor-cover');
-
-                const cover = document.createElement('div');
-                cover.className = 'page-cursor-refresh-cover';
-                cover.setAttribute('aria-hidden', 'true');
-                document.body.appendChild(cover);
-                cursorRefreshCover = cover;
-
-                cursorRefreshCoverTimer = window.setTimeout(removeCursorRefreshCover, CURSOR_REFRESH_COVER_MS);
-            };
-
-            const releaseCursorRefresh = () => {
-                window.clearTimeout(cursorRefreshReleaseTimer);
-                cursorRefreshReleaseTimer = 0;
-                root.classList.remove('is-page-cursor-refresh');
-                root.style.removeProperty('cursor');
-                removeCursorRefreshCover();
-                window.removeEventListener('pointermove', handleCursorRefreshMove);
-                window.removeEventListener('mousemove', handleCursorRefreshMove);
-            };
-
-            const handleCursorRefreshMove = () => {
-                if (navigating) {
-                    return;
-                }
-
-                window.clearTimeout(cursorRefreshReleaseTimer);
-                cursorRefreshReleaseTimer = window.setTimeout(releaseCursorRefresh, 0);
-            };
-
-            const holdCursorUntilMove = () => {
-                root.classList.add('is-page-cursor-refresh');
-                refreshCursorHitTest();
-                window.addEventListener('pointermove', handleCursorRefreshMove, { passive: true });
-                window.addEventListener('mousemove', handleCursorRefreshMove, { passive: true });
-            };
+            const wait = (duration) => new Promise((resolve) => window.setTimeout(resolve, duration));
 
             const afterNextPaint = (callback) => {
                 window.requestAnimationFrame(() => {
@@ -1942,20 +1931,26 @@
                 });
             };
 
-            const prefetchPage = (url) => {
-                if (!url || prefetched.has(url.href) || !shouldAnimatePath(url.pathname)) return;
-                prefetched.add(url.href);
+            const getPageRoot = () => document.querySelector(pageRootSelector);
 
-                const link = document.createElement('link');
-                link.rel = 'prefetch';
-                link.as = 'document';
-                link.href = url.href;
-                document.head.appendChild(link);
+            const getShell = () => document.querySelector(`${pageRootSelector} .home-shell, ${pageRootSelector} .blog-shell, ${pageRootSelector} .post-shell, ${pageRootSelector} .note-shell, ${pageRootSelector} .friends-shell, ${pageRootSelector} .photo-wall-shell, ${pageRootSelector} .guestbook-shell`);
 
-                fetch(url.href, { credentials: 'same-origin' }).catch(() => {});
+            const getTransitionTargets = () => {
+                const shell = getShell();
+                if (!shell) return [];
+
+                const activeTargetSelector = Object.entries(transitionTargetsByShell)
+                    .find(([className]) => shell.classList.contains(className))?.[1]?.join(', ');
+
+                if (!activeTargetSelector) return [];
+
+                return Array.from(shell.querySelectorAll(activeTargetSelector))
+                    .filter((element) => !element.closest('.photo-wall-lightbox, .guestbook-lightbox, .guestbook-composer'));
             };
 
-            const applyExitVectors = () => {
+            const applyTransitionVectors = (targets) => {
+                if (!targets.length) return;
+
                 const viewportCenterX = window.innerWidth / 2;
                 const viewportCenterY = window.innerHeight / 2;
                 const viewportRadius = Math.hypot(viewportCenterX, viewportCenterY);
@@ -2008,110 +2003,344 @@
                 });
             };
 
-            applyExitVectors();
+            const cleanTransientState = () => {
+                root.classList.remove(...transientRootClasses);
+                document.body.classList.remove(...transientBodyClasses);
+            };
 
-            const transitionSnapshot = (() => {
+            const getLinkUrl = (event) => {
+                if (event.defaultPrevented) return null;
+                if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return null;
+
+                const target = event.target instanceof Element ? event.target : null;
+                const link = target ? target.closest('a') : null;
+                if (!link) return null;
+                if (link.target === '_blank' || link.hasAttribute('download') || link.dataset.noPjax === 'true') return null;
+
+                const href = link.getAttribute('href') || '';
+                if (!href || href.startsWith('#') || /^(?:mailto|tel|javascript):/i.test(href)) return null;
+
+                const url = new URL(link.href, window.location.href);
+                if (url.origin !== window.location.origin) return null;
+                if (url.pathname === window.location.pathname && url.search === window.location.search) return null;
+                if (/^\/(?:api|images|cursors|vendor)\//.test(url.pathname)) return null;
+                if (url.pathname.endsWith('/atom.xml')) return null;
+
+                const extensionMatch = url.pathname.match(/\.([a-z0-9]+)$/i);
+                if (extensionMatch && extensionMatch[1].toLowerCase() !== 'html') return null;
+
+                return url;
+            };
+
+            const fetchPage = (url) => {
+                const key = url.href;
+                if (!pageCache.has(key)) {
+                    pageCache.set(key, fetch(key, {
+                        credentials: 'same-origin',
+                        headers: {
+                            Accept: 'text/html,application/xhtml+xml'
+                        }
+                    }).then(async (response) => {
+                        if (!response.ok) {
+                            throw new Error(`Request failed with ${response.status}`);
+                        }
+
+                        const type = response.headers.get('content-type') || '';
+                        if (type && !type.includes('text/html')) {
+                            throw new Error(`Unsupported content type: ${type}`);
+                        }
+
+                        return new DOMParser().parseFromString(await response.text(), 'text/html');
+                    }).catch((error) => {
+                        pageCache.delete(key);
+                        throw error;
+                    }));
+                }
+
+                return pageCache.get(key);
+            };
+
+            const prefetchPage = (url) => {
+                if (!url || pageCache.has(url.href)) return;
+                fetchPage(url).catch(() => {});
+            };
+
+            const executePageScripts = (container) => {
+                const scripts = Array.from(container.querySelectorAll('script'));
+                if (!scripts.length) return;
+
+                const pageScope = window.__sukiamePageScope;
+                if (pageScope) pageScope.begin();
+
                 try {
-                    const raw = window.sessionStorage.getItem(TRANSITION_STORAGE_KEY);
-                    if (!raw) return null;
-                    window.sessionStorage.removeItem(TRANSITION_STORAGE_KEY);
-                    return JSON.parse(raw);
-                } catch (error) {
-                    return null;
-                }
-            })();
+                    scripts.forEach((script) => {
+                        const executable = document.createElement('script');
 
-            const hasRecentTransition =
-                transitionSnapshot &&
-                transitionSnapshot.href === window.location.href &&
-                Date.now() - transitionSnapshot.at < 4000;
+                        Array.from(script.attributes).forEach((attribute) => {
+                            executable.setAttribute(attribute.name, attribute.value);
+                        });
 
-            if (hasRecentTransition) {
-                holdCursorUntilMove();
+                        if (!executable.src) {
+                            executable.textContent = script.textContent || '';
+                        }
 
-                if (!prefersReducedMotion.matches) {
-                    afterNextPaint(() => {
-                        root.classList.remove('is-page-enter-prep');
-                        root.classList.add('is-page-entering');
+                        script.parentNode.replaceChild(executable, script);
                     });
-
-                    window.setTimeout(() => {
-                        root.classList.remove('is-page-entering');
-                        root.classList.remove('is-page-enter-prep');
-                    }, ENTER_ANIMATION_MS + MAX_STAGGER_MS + 100);
-                } else {
-                    root.classList.remove('is-page-entering');
-                    root.classList.remove('is-page-enter-prep');
+                } finally {
+                    if (pageScope) pageScope.end();
                 }
-            } else {
-                root.classList.remove('is-page-enter-prep');
-                releaseCursorRefresh();
-            }
+            };
 
-            let navigating = false;
-            document.addEventListener('click', (event) => {
+            const initHomeLike = () => {
+                const likeButton = document.getElementById('home-like-pill');
+                if (!likeButton || likeButton.dataset.sukiameLikeReady === 'true') return;
+
+                const icon = likeButton.querySelector('.heart-icon');
+                const countEl = likeButton.querySelector('.like-count');
+                const storageKey = likeButton.dataset.storageKey || 'sukiame:home-like:ui';
+                const endpoint = likeButton.dataset.likeEndpoint || '/api/like/home-hero';
+                const baseCount = Number(likeButton.dataset.likeCount || '0');
+                let displayCount = baseCount;
+                let liked = false;
+                let pending = false;
+
+                likeButton.dataset.sukiameLikeReady = 'true';
+
+                try {
+                    liked = window.localStorage.getItem(storageKey) === 'true';
+                } catch (error) {}
+
+                const render = () => {
+                    likeButton.classList.toggle('is-liked', liked);
+                    likeButton.setAttribute('aria-pressed', liked ? 'true' : 'false');
+                    likeButton.disabled = pending;
+                    if (countEl) countEl.textContent = String(displayCount);
+                };
+
+                const animate = () => {
+                    [icon, countEl].forEach((element) => {
+                        if (!element) return;
+                        element.classList.remove('animating');
+                        void element.offsetWidth;
+                        element.classList.add('animating');
+                    });
+                };
+
+                const loadCount = async () => {
+                    try {
+                        const response = await fetch(endpoint, {
+                            headers: {
+                                Accept: 'application/json'
+                            }
+                        });
+                        if (!response.ok) {
+                            throw new Error(`Request failed with ${response.status}`);
+                        }
+                        const payload = await response.json();
+                        if (typeof payload.count === 'number' && Number.isFinite(payload.count)) {
+                            displayCount = payload.count;
+                            render();
+                        }
+                    } catch (error) {
+                        console.warn('[sukiame] Failed to load hero like count:', error.message);
+                    }
+                };
+
+                likeButton.addEventListener('click', async () => {
+                    if (liked || pending) {
+                        animate();
+                        return;
+                    }
+
+                    pending = true;
+                    render();
+
+                    try {
+                        const response = await fetch(endpoint, {
+                            method: 'POST',
+                            headers: {
+                                Accept: 'application/json'
+                            }
+                        });
+                        const payload = await response.json().catch(() => ({}));
+                        if (!response.ok) {
+                            throw new Error(payload.error || `Request failed with ${response.status}`);
+                        }
+
+                        liked = true;
+                        if (typeof payload.count === 'number' && Number.isFinite(payload.count)) {
+                            displayCount = payload.count;
+                        } else {
+                            displayCount += 1;
+                        }
+
+                        try {
+                            window.localStorage.setItem(storageKey, 'true');
+                        } catch (error) {}
+
+                        render();
+                        animate();
+                    } catch (error) {
+                        console.warn('[sukiame] Failed to submit hero like:', error.message);
+                    } finally {
+                        pending = false;
+                        render();
+                    }
+                });
+
+                if (liked && displayCount < 1) {
+                    displayCount = 1;
+                }
+
+                render();
+                loadCount();
+            };
+
+            const refreshVisitorCounter = () => {
+                const candidates = [window.BUSUANZI, window.Busuanzi, window.busuanzi, window.bszCaller];
+                const counter = candidates.find((item) => item && typeof item.fetch === 'function');
+                if (counter) {
+                    try {
+                        counter.fetch();
+                    } catch (error) {}
+                }
+            };
+
+            const initLayoutWidgets = () => {
+                if (typeof updateClock === 'function') updateClock();
+                if (typeof renderCalendar === 'function') renderCalendar(new Date());
+                initHomeLike();
+                refreshVisitorCounter();
+            };
+
+            window.__sukiameInitPageWidgets = initLayoutWidgets;
+
+            const restoreScroll = (url) => {
+                if (url.hash) {
+                    let targetId = url.hash.slice(1);
+                    try {
+                        targetId = decodeURIComponent(targetId);
+                    } catch (error) {}
+                    const target = document.getElementById(targetId);
+                    if (target) {
+                        target.scrollIntoView();
+                        return;
+                    }
+                }
+
+                window.scrollTo(0, 0);
+            };
+
+            const finishEnterAnimation = (serial) => {
+                window.setTimeout(() => {
+                    if (serial !== navigationSerial) return;
+                    root.classList.remove('is-page-entering', 'is-page-enter-prep', 'is-page-navigating');
+                    document.body.classList.remove('is-page-leaving');
+                    navigating = false;
+                }, ENTER_ANIMATION_MS + MAX_STAGGER_MS + 120);
+            };
+
+            const navigateTo = async (url, options = {}) => {
                 if (navigating) return;
 
-                const link = event.target.closest('a');
-                if (!link) return;
-                if (link.target === '_blank' || link.hasAttribute('download')) return;
-                if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-
-                const href = link.getAttribute('href') || '';
-                if (!href || href.startsWith('#') || href.startsWith('mailto:') || href.startsWith('tel:') || href.endsWith('/atom.xml')) return;
-
-                const nextUrl = new URL(link.href, window.location.href);
-                if (nextUrl.origin !== window.location.origin) return;
-                if (nextUrl.href === window.location.href) return;
-                if (!shouldAnimatePath(nextUrl.pathname)) return;
-
+                const serial = ++navigationSerial;
                 navigating = true;
-                event.preventDefault();
+
+                root.classList.remove('is-page-entering', 'is-page-enter-prep');
                 root.classList.add('is-page-navigating');
-                holdCursorUntilMove();
-                applyExitVectors();
-                prefetchPage(nextUrl);
-                storeTransitionSnapshot(nextUrl.href);
+                applyTransitionVectors(getTransitionTargets());
+
                 afterNextPaint(() => {
-                    document.body.classList.add('is-page-leaving');
+                    if (serial === navigationSerial) {
+                        document.body.classList.add('is-page-leaving');
+                    }
                 });
 
-                window.setTimeout(() => {
-                    storeTransitionSnapshot(nextUrl.href);
-                    window.location.href = nextUrl.href;
-                }, NAVIGATION_DELAY_MS);
-            });
+                try {
+                    const [nextDocument] = await Promise.all([
+                        fetchPage(url),
+                        wait(NAVIGATION_DELAY_MS)
+                    ]);
 
-            document.addEventListener('pointerenter', (event) => {
-                const link = event.target.closest('a');
-                if (!link) return;
-                const href = link.getAttribute('href') || '';
-                if (!href || href.startsWith('#') || href.startsWith('mailto:') || href.startsWith('tel:')) return;
-                const nextUrl = new URL(link.href, window.location.href);
-                if (nextUrl.origin !== window.location.origin) return;
-                prefetchPage(nextUrl);
+                    if (serial !== navigationSerial) return;
+
+                    const currentPageRoot = getPageRoot();
+                    const nextPageRoot = nextDocument.querySelector(pageRootSelector);
+                    if (!currentPageRoot || !nextPageRoot) {
+                        window.location.href = url.href;
+                        return;
+                    }
+
+                    if (window.__sukiameClearPageScope) {
+                        window.__sukiameClearPageScope();
+                    }
+
+                    document.title = nextDocument.title || document.title;
+                    document.body.className = nextDocument.body.className || '';
+                    root.classList.remove(...transientRootClasses);
+                    root.classList.add('is-page-enter-prep');
+                    currentPageRoot.innerHTML = nextPageRoot.innerHTML;
+
+                    executePageScripts(currentPageRoot);
+                    initLayoutWidgets();
+                    applyTransitionVectors(getTransitionTargets());
+
+                    if (options.history !== false) {
+                        window.history.pushState({ sukiamePjax: true }, '', url.href);
+                    }
+
+                    restoreScroll(url);
+
+                    afterNextPaint(() => {
+                        if (serial !== navigationSerial) return;
+                        root.classList.remove('is-page-enter-prep');
+                        root.classList.add('is-page-entering');
+                        document.dispatchEvent(new CustomEvent('sukiame:page-ready', {
+                            detail: {
+                                url: url.href
+                            }
+                        }));
+                    });
+
+                    finishEnterAnimation(serial);
+                } catch (error) {
+                    console.warn('[sukiame] PJAX navigation failed, falling back:', error.message);
+                    window.location.href = url.href;
+                }
+            };
+
+            document.addEventListener('click', (event) => {
+                const url = getLinkUrl(event);
+                if (!url) return;
+
+                event.preventDefault();
+                event.stopImmediatePropagation();
+                navigateTo(url);
             }, true);
 
-            window.setTimeout(() => {
-                ['/archives/', '/friends/'].forEach((path) => {
-                    prefetchPage(new URL(path, window.location.href));
-                });
-            }, 250);
+            document.addEventListener('pointerenter', (event) => {
+                const url = getLinkUrl(event);
+                if (!url) return;
+                prefetchPage(url);
+            }, true);
 
-            window.addEventListener('pageshow', (event) => {
-                document.body.classList.remove('is-page-leaving');
-                root.classList.remove('is-page-navigating');
+            window.addEventListener('popstate', () => {
+                cleanTransientState();
+                navigateTo(new URL(window.location.href), { history: false });
+            });
+
+            window.addEventListener('pageshow', () => {
+                cleanTransientState();
                 navigating = false;
-                if (event.persisted) {
-                    releaseCursorRefresh();
-                }
             });
 
             window.addEventListener('resize', () => {
                 if (!navigating) {
-                    applyExitVectors();
+                    applyTransitionVectors(getTransitionTargets());
                 }
             });
+
+            window.history.replaceState({ sukiamePjax: true }, '', window.location.href);
         })();
     </script>
 </body>
