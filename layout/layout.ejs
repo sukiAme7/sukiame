@@ -6,6 +6,7 @@
     <title><%- page.title || config.title %></title>
     <link rel="icon" href="<%- /^(?:[a-z][a-z0-9+.-]*:)?\/\//i.test(theme.favicon || theme.avatar || '') ? (theme.favicon || theme.avatar) : url_for(theme.favicon || theme.avatar || '/images/avatar-cat.svg') %>">
     <link rel="preload" as="image" type="image/x-icon" href="<%- url_for('/cursors/cur118.cur') %>">
+    <link rel="preload" as="image" type="image/png" href="<%- url_for('/cursors/cur118-fake-40.png') %>">
     <link rel="alternate" type="application/atom+xml" title="<%- config.title || 'RSS Feed' %>" href="<%- url_for('/atom.xml') %>">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -23,6 +24,16 @@
                     snapshot.href === window.location.href &&
                     Date.now() - snapshot.at < 4000
                 ) {
+                    const cursorX = Number(snapshot.cursorX);
+                    const cursorY = Number(snapshot.cursorY);
+
+                    if (Number.isFinite(cursorX) && Number.isFinite(cursorY)) {
+                        document.documentElement.style.setProperty('--page-fake-cursor-x', `${cursorX}px`);
+                        document.documentElement.style.setProperty('--page-fake-cursor-y', `${cursorY}px`);
+                        document.documentElement.style.setProperty('cursor', 'none', 'important');
+                        document.documentElement.classList.add('is-page-fake-cursor');
+                    }
+
                     document.documentElement.classList.add('is-page-enter-prep', 'is-page-cursor-refresh', 'is-page-cursor-cover');
                 }
             } catch (error) {}
@@ -128,6 +139,26 @@
             z-index: 2147483647;
             background: transparent;
             cursor: url("<%- url_for('/cursors/cur118.cur') %>"), auto !important;
+        }
+
+        html.is-page-fake-cursor,
+        html.is-page-fake-cursor body,
+        html.is-page-fake-cursor body *,
+        html.is-page-fake-cursor .page-cursor-refresh-cover {
+            cursor: none !important;
+        }
+
+        html.is-page-fake-cursor::after {
+            content: "";
+            position: fixed;
+            left: var(--page-fake-cursor-x, 0px);
+            top: var(--page-fake-cursor-y, 0px);
+            width: 40px;
+            height: 40px;
+            z-index: 2147483647;
+            pointer-events: none;
+            background: url("<%- url_for('/cursors/cur118-fake-40.png') %>") center / contain no-repeat;
+            transform: translate(-8px, -5px);
         }
 
         .sakura-click-petal {
@@ -1870,6 +1901,10 @@
 
             const releaseCursorRefresh = () => {
                 root.classList.remove('is-page-cursor-refresh');
+                root.classList.remove('is-page-fake-cursor');
+                root.style.removeProperty('cursor');
+                root.style.removeProperty('--page-fake-cursor-x');
+                root.style.removeProperty('--page-fake-cursor-y');
                 removeCursorRefreshCover();
                 window.removeEventListener('pointermove', releaseCursorRefresh);
                 window.removeEventListener('mousemove', releaseCursorRefresh);
@@ -1877,6 +1912,9 @@
 
             const holdCursorUntilMove = () => {
                 root.classList.add('is-page-cursor-refresh');
+                if (root.classList.contains('is-page-fake-cursor')) {
+                    root.style.setProperty('cursor', 'none', 'important');
+                }
                 refreshCursorHitTest();
                 window.addEventListener('pointermove', releaseCursorRefresh, { once: true, passive: true });
                 window.addEventListener('mousemove', releaseCursorRefresh, { once: true, passive: true });
@@ -2019,7 +2057,9 @@
                 try {
                     window.sessionStorage.setItem(TRANSITION_STORAGE_KEY, JSON.stringify({
                         href: nextUrl.href,
-                        at: Date.now()
+                        at: Date.now(),
+                        cursorX: event.clientX,
+                        cursorY: event.clientY
                     }));
                 } catch (error) {}
                 afterNextPaint(() => {
