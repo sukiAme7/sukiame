@@ -7,13 +7,35 @@
     <link rel="icon" href="<%- /^(?:[a-z][a-z0-9+.-]*:)?\/\//i.test(theme.favicon || theme.avatar || '') ? (theme.favicon || theme.avatar) : url_for(theme.favicon || theme.avatar || '/images/avatar-cat.svg') %>">
     <link rel="preload" as="image" type="image/x-icon" href="<%- url_for('/cursors/cur118.cur') %>">
     <style>
+        :root {
+            --sukiame-cursor-default: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAAAoCAYAAACM/rhtAAADeUlEQVR4nO2XPUwjRxTH/2/Gg/Eam8UY2UIYogvEilPACekEUpQCRemMaIIog0RNilQUV+FUlyIKElRHInQFcYEOJSgSgjIFEk0ERShC7mIsokgR5xMf6/XOvBRY95GLfXd4j0vhX7ezs29/O+/NzA7QpMnbhV52Xyn1oRCiu1Kp/GyMKQLg6xB7FSgWi91LJpN6YGDASSQSXjgcvg0ggJd/2JtHKfVJMpnUe3t7zMy8trbGqVSqYtv2CoAWvGVJCofDX2ezWZefYXd3l/v6+irt7e13r0tS1GpXSvX29/erZxuHh4exuroaCIVCn1mW9QWuId01BYUQQaXUCzdGRkawtLQkIpFILhgMfgpAXrcgERGhzshMTExgdnZWdHR03FVK3cIblKw1gnUFAWBubg7ZbLYlHo//IKXsrxOrIa4clIiwsLAgMplMNB6P3xdCxBqJV4uGAgaDQeTz+UAikXjXtu17RNQKnydNw18ci8WQz+dVJBL5uK2t7UsACj5K+pKSdDqN5eVlaVnW56FQaAaXy48v+FYzY2NjyOVyFI1Gv1FKfQSfZravRT0zM4Px8XHq7Oy841c9+j7rJicnBYAPiCgCH1J9pQAbGxtYX1+HUgqDg4MYHR1FOp0GAKysrBgAD4goTESPmNlDA79ory24uLiIXC6HVCoFrTW2trZwcnICIoKUkgGclUqlr64q1JDgzs4O5ufnMTQ0hJ6eniftjuNge3tbn5+f/+Q4znfGmAIznzKzRoM/uDUFmbniuu6T6+PjY0xPT6O3t/c5OQAoFovQWpcdx/lWa/3QGPMnMz8G4DUiB9SeJFwul3/Z3NysHB0doVAoYGpqis/Ozri7u/u5jlprHBwceBcXF99rrQvGmCIz/83MZfhwPKi1DASklDfi8fh9Y8z7ACCE+N3zvEdCiJtdXV06k8lI27axv7+Pw8PDx6VSacrzvF+ro+f4IVdPUBBRVEr5jlLqFjMHjDEPAXhSyvcsy5oWQtyUUmpjjDk9PZ13XfdHrfWDamq1H3L1BImIFBG1E1GMiFqZuQKgDKBVCNEhpUxLKW94nndgjPlNa/0HM//FzC58PPnVW+kJQICIWnC5bRlcFr0ioraqvAVAG2NOqnV3Ue3nG6+yFf27DwGQVXFVFXKrI+er3H+9/HWfJTxN5//mQN+kSZMmTZo85R8jFlZj7qDblwAAAABJRU5ErkJggg==") 8 5, auto;
+        }
+
+        html,
+        body,
+        html.is-cursor-booting,
+        html.is-cursor-booting body,
+        html.is-cursor-booting body *,
+        html a[href^="/"]:not([href^="//"]):not([href$="/atom.xml"]):not([target="_blank"]),
+        html a[href^="/"]:not([href^="//"]):not([href$="/atom.xml"]):not([target="_blank"]) *,
+        html a[href^="./"]:not([href$="/atom.xml"]):not([target="_blank"]),
+        html a[href^="./"]:not([href$="/atom.xml"]):not([target="_blank"]) *,
+        html a[href^="../"]:not([href$="/atom.xml"]):not([target="_blank"]),
+        html a[href^="../"]:not([href$="/atom.xml"]):not([target="_blank"]) *,
+        html a[href^="https://www.sukiame.cn/"]:not([href$="/atom.xml"]):not([target="_blank"]),
+        html a[href^="https://www.sukiame.cn/"]:not([href$="/atom.xml"]):not([target="_blank"]) *,
+        html a[href^="https://sukiame.cn/"]:not([href$="/atom.xml"]):not([target="_blank"]),
+        html a[href^="https://sukiame.cn/"]:not([href$="/atom.xml"]):not([target="_blank"]) * {
+            cursor: var(--sukiame-cursor-default) !important;
+        }
+
         html.is-page-enter-prep,
         html.is-page-enter-prep body,
         html.is-page-enter-prep body *,
         html.is-page-cursor-refresh,
         html.is-page-cursor-refresh body,
         html.is-page-cursor-refresh body * {
-            cursor: url("<%- url_for('/cursors/cur118.cur') %>"), auto !important;
+            cursor: var(--sukiame-cursor-default) !important;
         }
 
         html.is-page-cursor-cover::before {
@@ -22,11 +44,13 @@
             inset: 0;
             z-index: 2147483647;
             background: transparent;
-            cursor: url("<%- url_for('/cursors/cur118.cur') %>"), auto !important;
+            cursor: var(--sukiame-cursor-default) !important;
         }
     </style>
     <script>
         (() => {
+            document.documentElement.classList.add('is-cursor-booting');
+
             try {
                 const raw = window.sessionStorage.getItem('sukiame-page-transition');
                 if (!raw) return;
@@ -81,7 +105,7 @@
         }
 
         html {
-            cursor: url("<%- url_for('/cursors/cur118.cur') %>"), auto;
+            cursor: var(--sukiame-cursor-default);
         }
 
         body {
@@ -91,7 +115,7 @@
             background-size: 400% 400%;
             animation: gradientBG 15s ease infinite;
             color: var(--text-main);
-            cursor: url("<%- url_for('/cursors/cur118.cur') %>"), auto;
+            cursor: var(--sukiame-cursor-default);
             font-family: 'Nunito', sans-serif;
         }
 
@@ -129,7 +153,7 @@
         html.is-page-cursor-refresh,
         html.is-page-cursor-refresh body,
         html.is-page-cursor-refresh body * {
-            cursor: url("<%- url_for('/cursors/cur118.cur') %>"), auto !important;
+            cursor: var(--sukiame-cursor-default) !important;
         }
 
         .page-cursor-refresh-cover {
@@ -137,7 +161,7 @@
             inset: 0;
             z-index: 2147483647;
             background: transparent;
-            cursor: url("<%- url_for('/cursors/cur118.cur') %>"), auto !important;
+            cursor: var(--sukiame-cursor-default) !important;
         }
 
         html.is-page-cursor-cover::before {
@@ -146,7 +170,7 @@
             inset: 0;
             z-index: 2147483647;
             background: transparent;
-            cursor: url("<%- url_for('/cursors/cur118.cur') %>"), auto !important;
+            cursor: var(--sukiame-cursor-default) !important;
         }
 
         .sakura-click-petal {
@@ -315,13 +339,6 @@
             background: transparent;
             cursor: pointer;
             font: inherit;
-        }
-
-        a.site-cursor-link,
-        a.site-cursor-link *,
-        a.site-cursor-link:hover,
-        a.site-cursor-link:hover * {
-            cursor: url("<%- url_for('/cursors/cur118.cur') %>"), auto !important;
         }
 
         .home-shell {
@@ -1787,6 +1804,13 @@
             root.classList.remove('is-page-navigating');
             root.classList.remove('is-page-entering');
 
+            const releaseCursorBoot = () => {
+                root.classList.remove('is-cursor-booting');
+            };
+
+            window.addEventListener('pointermove', releaseCursorBoot, { once: true, passive: true });
+            window.addEventListener('mousemove', releaseCursorBoot, { once: true, passive: true });
+
             const shell = document.querySelector('.home-shell, .blog-shell, .post-shell, .note-shell, .friends-shell, .photo-wall-shell, .guestbook-shell');
             if (!shell) return;
 
@@ -1858,27 +1882,6 @@
                 if (/^\/\d{4}\//.test(pathname)) return true;
                 return false;
             };
-
-            const isSitePageLink = (link) => {
-                if (!link || link.target === '_blank' || link.hasAttribute('download')) return false;
-
-                const href = link.getAttribute('href') || '';
-                if (!href || href.startsWith('#') || href.startsWith('mailto:') || href.startsWith('tel:') || href.endsWith('/atom.xml')) return false;
-
-                const nextUrl = new URL(link.href, window.location.href);
-                if (nextUrl.origin !== window.location.origin) return false;
-                if (nextUrl.href === window.location.href) return false;
-
-                return true;
-            };
-
-            const syncSiteCursorLinks = () => {
-                document.querySelectorAll('a[href]').forEach((link) => {
-                    link.classList.toggle('site-cursor-link', isSitePageLink(link));
-                });
-            };
-
-            syncSiteCursorLinks();
 
             const prefetched = new Set();
             const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
