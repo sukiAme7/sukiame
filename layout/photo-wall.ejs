@@ -316,33 +316,6 @@ const wallItems = rawItems.map((item, index) => ({
         font-weight: 800;
     }
 
-    .polaroid-date {
-        min-height: 1.25rem;
-        margin-top: 0.48rem;
-        padding: 0 0.08rem;
-        display: flex;
-        align-items: center;
-        gap: 0.34rem;
-        color: #64748b;
-        font-size: 0.68rem;
-        line-height: 1.25;
-        font-weight: 800;
-        letter-spacing: 0;
-    }
-
-    .polaroid-date i {
-        flex: 0 0 auto;
-        color: #38bdf8;
-        font-size: 0.66rem;
-    }
-
-    .polaroid-date span {
-        min-width: 0;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-
     body.photo-wall-lightbox-open {
         overflow: hidden;
     }
@@ -413,11 +386,12 @@ const wallItems = rawItems.map((item, index) => ({
     }
 
     .photo-wall-lightbox-note {
+        position: relative;
         align-self: center;
         width: 100%;
         max-height: min(70vh, 34rem);
         overflow: auto;
-        padding: 1.2rem 1.15rem 1.25rem;
+        padding: 1.28rem 1.15rem 1.25rem;
         border-radius: 0.5rem;
         border: 1px solid rgba(255, 255, 255, 0.86);
         background: #fffdf7;
@@ -439,10 +413,16 @@ const wallItems = rawItems.map((item, index) => ({
         font-weight: 800;
     }
 
+    .photo-wall-lightbox-note.has-date .photo-wall-lightbox-note-title {
+        padding-right: 7.1rem;
+    }
+
     .photo-wall-lightbox-note-date {
-        width: fit-content;
-        max-width: 100%;
-        margin: -0.24rem 0 0.82rem;
+        position: absolute;
+        top: 0.95rem;
+        right: 0.95rem;
+        max-width: min(8.6rem, 44%);
+        margin: 0;
         padding: 0.32rem 0.52rem;
         display: inline-flex;
         align-items: center;
@@ -452,7 +432,9 @@ const wallItems = rawItems.map((item, index) => ({
         font-size: 0.72rem;
         line-height: 1.25;
         font-weight: 800;
-        overflow-wrap: anywhere;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 
     .photo-wall-lightbox-note-date[hidden],
@@ -648,12 +630,6 @@ const wallItems = rawItems.map((item, index) => ({
                             <span class="polaroid-fallback"><%- item.title %></span>
                         <% } %>
                     </span>
-                    <% if (item.date) { %>
-                        <span class="polaroid-date">
-                            <i class="fa-regular fa-calendar" aria-hidden="true"></i>
-                            <span><%- item.date %></span>
-                        </span>
-                    <% } %>
                 </span>
                 <% if (item.date) { %>
                     <span class="polaroid-date-data" hidden><%= item.date %></span>
@@ -729,17 +705,21 @@ const wallItems = rawItems.map((item, index) => ({
                 if (hasDetails) {
                     lightboxNoteTitle.textContent = image.alt || '';
                     lightboxNoteDate.textContent = dateText;
+                    lightboxNoteDate.dateTime = dateText;
                     lightboxNoteDate.hidden = !dateText;
                     lightboxNoteText.textContent = noteText;
                     lightboxNoteText.hidden = !noteText;
+                    lightboxNote.classList.toggle('has-date', !!dateText);
                     lightboxNote.hidden = false;
                     lightboxNote.setAttribute('aria-hidden', 'false');
                 } else {
                     lightboxNoteTitle.textContent = '';
                     lightboxNoteDate.textContent = '';
+                    lightboxNoteDate.removeAttribute('datetime');
                     lightboxNoteDate.hidden = true;
                     lightboxNoteText.textContent = '';
                     lightboxNoteText.hidden = false;
+                    lightboxNote.classList.remove('has-date');
                     lightboxNote.hidden = true;
                     lightboxNote.setAttribute('aria-hidden', 'true');
                 }
@@ -773,9 +753,11 @@ const wallItems = rawItems.map((item, index) => ({
             if (lightboxNote && lightboxNoteTitle && lightboxNoteDate && lightboxNoteText) {
                 lightboxNoteTitle.textContent = '';
                 lightboxNoteDate.textContent = '';
+                lightboxNoteDate.removeAttribute('datetime');
                 lightboxNoteDate.hidden = true;
                 lightboxNoteText.textContent = '';
                 lightboxNoteText.hidden = false;
+                lightboxNote.classList.remove('has-date');
                 lightboxNote.hidden = true;
                 lightboxNote.setAttribute('aria-hidden', 'true');
             }
