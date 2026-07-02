@@ -7,13 +7,17 @@
     <link rel="icon" href="<%- /^(?:[a-z][a-z0-9+.-]*:)?\/\//i.test(theme.favicon || theme.avatar || '') ? (theme.favicon || theme.avatar) : url_for(theme.favicon || theme.avatar || '/images/avatar-cat.svg') %>">
     <link rel="preload" as="image" type="image/x-icon" href="<%- url_for('/cursors/cur118.cur') %>">
     <link rel="preload" as="image" type="image/png" href="<%- url_for('/cursors/cur118-fake-40.png') %>">
-    <link rel="alternate" type="application/atom+xml" title="<%- config.title || 'RSS Feed' %>" href="<%- url_for('/atom.xml') %>">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="<%- url_for('/vendor/katex/katex.min.css') %>">
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=ZCOOL+KuaiLe&display=swap" rel="stylesheet">
     <script>
         (() => {
+            const installCursorGuard = () => {
+                if (document.getElementById('sukiame-transition-cursor-guard')) return;
+
+                const style = document.createElement('style');
+                style.id = 'sukiame-transition-cursor-guard';
+                style.textContent = 'html,html *,body,body *{cursor:none!important;}';
+                document.head.appendChild(style);
+            };
+
             try {
                 const raw = window.sessionStorage.getItem('sukiame-page-transition');
                 if (!raw) return;
@@ -29,6 +33,7 @@
                     const cursorClasses = ['is-page-enter-prep', 'is-page-cursor-refresh'];
 
                     if (Number.isFinite(cursorX) && Number.isFinite(cursorY)) {
+                        installCursorGuard();
                         document.documentElement.style.setProperty('--page-fake-cursor-x', `${cursorX}px`);
                         document.documentElement.style.setProperty('--page-fake-cursor-y', `${cursorY}px`);
                         document.documentElement.style.setProperty('cursor', 'none', 'important');
@@ -42,6 +47,11 @@
             } catch (error) {}
         })();
     </script>
+    <link rel="alternate" type="application/atom+xml" title="<%- config.title || 'RSS Feed' %>" href="<%- url_for('/atom.xml') %>">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="<%- url_for('/vendor/katex/katex.min.css') %>">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=ZCOOL+KuaiLe&display=swap" rel="stylesheet">
     <script>
         tailwind.config = {
             theme: {
@@ -1879,6 +1889,52 @@
             let cursorRefreshCover = null;
             let cursorRefreshCoverTimer = 0;
             let cursorRefreshReleaseTimer = 0;
+            let pendingTransitionHref = '';
+            let fakeCursorX = null;
+            let fakeCursorY = null;
+
+            const installCursorGuard = () => {
+                if (document.getElementById('sukiame-transition-cursor-guard')) return;
+
+                const style = document.createElement('style');
+                style.id = 'sukiame-transition-cursor-guard';
+                style.textContent = 'html,html *,body,body *{cursor:none!important;}';
+                document.head.appendChild(style);
+            };
+
+            const removeCursorGuard = () => {
+                document.getElementById('sukiame-transition-cursor-guard')?.remove();
+            };
+
+            const storeTransitionSnapshot = (href, cursorX, cursorY) => {
+                if (!href) return;
+
+                try {
+                    window.sessionStorage.setItem(TRANSITION_STORAGE_KEY, JSON.stringify({
+                        href,
+                        at: Date.now(),
+                        cursorX,
+                        cursorY
+                    }));
+                } catch (error) {}
+            };
+
+            const activateFakeCursor = (cursorX, cursorY) => {
+                if (!Number.isFinite(cursorX) || !Number.isFinite(cursorY)) return false;
+
+                fakeCursorX = cursorX;
+                fakeCursorY = cursorY;
+                window.clearTimeout(cursorRefreshReleaseTimer);
+                cursorRefreshReleaseTimer = 0;
+                removeCursorRefreshCover();
+                installCursorGuard();
+                root.style.setProperty('--page-fake-cursor-x', `${cursorX}px`);
+                root.style.setProperty('--page-fake-cursor-y', `${cursorY}px`);
+                root.style.setProperty('cursor', 'none', 'important');
+                root.classList.add('is-page-cursor-refresh', 'is-page-fake-cursor');
+
+                return true;
+            };
 
             const removeCursorRefreshCover = () => {
                 window.clearTimeout(cursorRefreshCoverTimer);
@@ -1912,6 +1968,10 @@
                 root.style.removeProperty('cursor');
                 root.style.removeProperty('--page-fake-cursor-x');
                 root.style.removeProperty('--page-fake-cursor-y');
+                pendingTransitionHref = '';
+                fakeCursorX = null;
+                fakeCursorY = null;
+                removeCursorGuard();
                 removeCursorRefreshCover();
                 window.removeEventListener('pointermove', handleCursorRefreshMove);
                 window.removeEventListener('mousemove', handleCursorRefreshMove);
@@ -1919,9 +1979,20 @@
 
             const handleCursorRefreshMove = (event) => {
                 if (root.classList.contains('is-page-fake-cursor')) {
-                    root.style.setProperty('--page-fake-cursor-x', `${event.clientX}px`);
-                    root.style.setProperty('--page-fake-cursor-y', `${event.clientY}px`);
+                    fakeCursorX = event.clientX;
+                    fakeCursorY = event.clientY;
+                    root.style.setProperty('--page-fake-cursor-x', `${fakeCursorX}px`);
+                    root.style.setProperty('--page-fake-cursor-y', `${fakeCursorY}px`);
                     root.style.setProperty('cursor', 'none', 'important');
+                    installCursorGuard();
+
+                    if (pendingTransitionHref) {
+                        storeTransitionSnapshot(pendingTransitionHref, fakeCursorX, fakeCursorY);
+                    }
+                }
+
+                if (navigating) {
+                    return;
                 }
 
                 window.clearTimeout(cursorRefreshReleaseTimer);
@@ -2070,22 +2141,27 @@
 
                 navigating = true;
                 event.preventDefault();
+                pendingTransitionHref = nextUrl.href;
+                activateFakeCursor(event.clientX, event.clientY);
+                holdCursorUntilMove();
                 root.classList.add('is-page-navigating');
                 applyExitVectors();
                 prefetchPage(nextUrl);
-                try {
-                    window.sessionStorage.setItem(TRANSITION_STORAGE_KEY, JSON.stringify({
-                        href: nextUrl.href,
-                        at: Date.now(),
-                        cursorX: event.clientX,
-                        cursorY: event.clientY
-                    }));
-                } catch (error) {}
+                storeTransitionSnapshot(
+                    nextUrl.href,
+                    Number.isFinite(fakeCursorX) ? fakeCursorX : event.clientX,
+                    Number.isFinite(fakeCursorY) ? fakeCursorY : event.clientY
+                );
                 afterNextPaint(() => {
                     document.body.classList.add('is-page-leaving');
                 });
 
                 window.setTimeout(() => {
+                    storeTransitionSnapshot(
+                        nextUrl.href,
+                        Number.isFinite(fakeCursorX) ? fakeCursorX : event.clientX,
+                        Number.isFinite(fakeCursorY) ? fakeCursorY : event.clientY
+                    );
                     window.location.href = nextUrl.href;
                 }, NAVIGATION_DELAY_MS);
             });
@@ -2106,10 +2182,14 @@
                 });
             }, 250);
 
-            window.addEventListener('pageshow', () => {
+            window.addEventListener('pageshow', (event) => {
                 document.body.classList.remove('is-page-leaving');
                 root.classList.remove('is-page-navigating');
+                pendingTransitionHref = '';
                 navigating = false;
+                if (event.persisted) {
+                    releaseCursorRefresh();
+                }
             });
 
             window.addEventListener('resize', () => {
