@@ -13,19 +13,8 @@
 
         html,
         body,
-        html.is-cursor-booting,
-        html.is-cursor-booting body,
-        html.is-cursor-booting body *,
-        html a[href^="/"]:not([href^="//"]):not([href$="/atom.xml"]):not([target="_blank"]),
-        html a[href^="/"]:not([href^="//"]):not([href$="/atom.xml"]):not([target="_blank"]) *,
-        html a[href^="./"]:not([href$="/atom.xml"]):not([target="_blank"]),
-        html a[href^="./"]:not([href$="/atom.xml"]):not([target="_blank"]) *,
-        html a[href^="../"]:not([href$="/atom.xml"]):not([target="_blank"]),
-        html a[href^="../"]:not([href$="/atom.xml"]):not([target="_blank"]) *,
-        html a[href^="https://www.sukiame.cn/"]:not([href$="/atom.xml"]):not([target="_blank"]),
-        html a[href^="https://www.sukiame.cn/"]:not([href$="/atom.xml"]):not([target="_blank"]) *,
-        html a[href^="https://sukiame.cn/"]:not([href$="/atom.xml"]):not([target="_blank"]),
-        html a[href^="https://sukiame.cn/"]:not([href$="/atom.xml"]):not([target="_blank"]) * {
+        html *,
+        body * {
             cursor: var(--sukiame-cursor-default) !important;
         }
 
@@ -49,8 +38,6 @@
     </style>
     <script>
         (() => {
-            document.documentElement.classList.add('is-cursor-booting');
-
             try {
                 const raw = window.sessionStorage.getItem('sukiame-page-transition');
                 if (!raw) return;
@@ -320,7 +307,7 @@
 
         a {
             color: inherit;
-            cursor: pointer;
+            cursor: var(--sukiame-cursor-default);
             text-decoration: none;
         }
 
@@ -331,13 +318,13 @@
         input[type="button"],
         input[type="submit"],
         input[type="reset"] {
-            cursor: pointer;
+            cursor: var(--sukiame-cursor-default);
         }
 
         button {
             border: 0;
             background: transparent;
-            cursor: pointer;
+            cursor: var(--sukiame-cursor-default);
             font: inherit;
         }
 
@@ -414,7 +401,7 @@
             width: 6rem;
             height: 6rem;
             margin-bottom: 1.25rem;
-            cursor: pointer;
+            cursor: var(--sukiame-cursor-default);
         }
 
         .profile-avatar {
@@ -1803,13 +1790,6 @@
             document.body.classList.remove('is-page-leaving');
             root.classList.remove('is-page-navigating');
             root.classList.remove('is-page-entering');
-
-            const releaseCursorBoot = () => {
-                root.classList.remove('is-cursor-booting');
-            };
-
-            window.addEventListener('pointermove', releaseCursorBoot, { once: true, passive: true });
-            window.addEventListener('mousemove', releaseCursorBoot, { once: true, passive: true });
 
             const shell = document.querySelector('.home-shell, .blog-shell, .post-shell, .note-shell, .friends-shell, .photo-wall-shell, .guestbook-shell');
             if (!shell) return;

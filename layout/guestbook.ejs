@@ -320,7 +320,7 @@
             animation: guestbookReveal 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
             animation-delay: calc(var(--note-delay) * 90ms);
             transition: transform 0.28s ease;
-            cursor: grab;
+            cursor: var(--sukiame-cursor-default);
             touch-action: none;
             user-select: none;
             -webkit-user-select: none;
@@ -332,7 +332,7 @@
         }
 
         .sticky-note-card.is-dragging {
-            cursor: grabbing;
+            cursor: var(--sukiame-cursor-default);
             transition: none;
             z-index: 40;
         }
@@ -722,7 +722,7 @@
 
         .guestbook-submit:disabled {
             opacity: 0.55;
-            cursor: not-allowed;
+            cursor: var(--sukiame-cursor-default);
             transform: none;
             box-shadow: none;
         }

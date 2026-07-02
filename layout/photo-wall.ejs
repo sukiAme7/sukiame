@@ -237,7 +237,7 @@ const wallItems = rawItems.map((item, index) => ({
         animation: photoWallReveal 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
         animation-delay: calc(var(--photo-delay) * 90ms);
         transition: transform 0.28s ease;
-        cursor: grab;
+        cursor: var(--sukiame-cursor-default);
         touch-action: none;
         user-select: none;
         -webkit-user-select: none;
@@ -249,7 +249,7 @@ const wallItems = rawItems.map((item, index) => ({
     }
 
     .polaroid-card.is-dragging {
-        cursor: grabbing;
+        cursor: var(--sukiame-cursor-default);
         transition: none;
         z-index: 40;
     }
