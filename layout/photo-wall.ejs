@@ -80,9 +80,17 @@ const rawItems = Array.isArray(photoWallConfig.items) && photoWallConfig.items.l
   ? photoWallConfig.items
   : defaultItems;
 
+const formatConfigText = (value) => {
+  if (value instanceof Date && !Number.isNaN(value.getTime())) {
+    return value.toISOString().slice(0, 10);
+  }
+
+  return String(value);
+};
+
 const pickText = (...values) => {
   for (const value of values) {
-    if (value !== undefined && value !== null && value !== '') return String(value);
+    if (value !== undefined && value !== null && value !== '') return formatConfigText(value);
   }
   return '';
 };
@@ -90,6 +98,7 @@ const pickText = (...values) => {
 const wallItems = rawItems.map((item, index) => ({
   title: item.title || `Frame ${index + 1}`,
   image: item.image || '',
+  date: pickText(item.date, item.time, item.taken_at, item.taken, item.created_at, item.created),
   note: pickText(item.note, item.description, item.caption, item.message),
   x: typeof item.x === 'number' ? item.x : 10 + (index % 4) * 20,
   y: typeof item.y === 'number' ? item.y : 18 + Math.floor(index / 4) * 22,
@@ -307,6 +316,33 @@ const wallItems = rawItems.map((item, index) => ({
         font-weight: 800;
     }
 
+    .polaroid-date {
+        min-height: 1.25rem;
+        margin-top: 0.48rem;
+        padding: 0 0.08rem;
+        display: flex;
+        align-items: center;
+        gap: 0.34rem;
+        color: #64748b;
+        font-size: 0.68rem;
+        line-height: 1.25;
+        font-weight: 800;
+        letter-spacing: 0;
+    }
+
+    .polaroid-date i {
+        flex: 0 0 auto;
+        color: #38bdf8;
+        font-size: 0.66rem;
+    }
+
+    .polaroid-date span {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
     body.photo-wall-lightbox-open {
         overflow: hidden;
     }
@@ -401,6 +437,27 @@ const wallItems = rawItems.map((item, index) => ({
         font-size: 0.92rem;
         line-height: 1.45;
         font-weight: 800;
+    }
+
+    .photo-wall-lightbox-note-date {
+        width: fit-content;
+        max-width: 100%;
+        margin: -0.24rem 0 0.82rem;
+        padding: 0.32rem 0.52rem;
+        display: inline-flex;
+        align-items: center;
+        color: #0369a1;
+        background: #e0f2fe;
+        border-radius: 999px;
+        font-size: 0.72rem;
+        line-height: 1.25;
+        font-weight: 800;
+        overflow-wrap: anywhere;
+    }
+
+    .photo-wall-lightbox-note-date[hidden],
+    .photo-wall-lightbox-note-text[hidden] {
+        display: none;
     }
 
     .photo-wall-lightbox-note-text {
@@ -591,7 +648,16 @@ const wallItems = rawItems.map((item, index) => ({
                             <span class="polaroid-fallback"><%- item.title %></span>
                         <% } %>
                     </span>
+                    <% if (item.date) { %>
+                        <span class="polaroid-date">
+                            <i class="fa-regular fa-calendar" aria-hidden="true"></i>
+                            <span><%- item.date %></span>
+                        </span>
+                    <% } %>
                 </span>
+                <% if (item.date) { %>
+                    <span class="polaroid-date-data" hidden><%= item.date %></span>
+                <% } %>
                 <% if (item.note) { %>
                     <span class="polaroid-note-data" hidden><%= item.note %></span>
                 <% } %>
@@ -610,6 +676,7 @@ const wallItems = rawItems.map((item, index) => ({
             </figure>
             <aside class="photo-wall-lightbox-note" aria-hidden="true" hidden>
                 <strong class="photo-wall-lightbox-note-title"></strong>
+                <time class="photo-wall-lightbox-note-date" hidden></time>
                 <p class="photo-wall-lightbox-note-text"></p>
             </aside>
         </div>
@@ -629,6 +696,7 @@ const wallItems = rawItems.map((item, index) => ({
         const lightboxCaption = lightbox ? lightbox.querySelector('.photo-wall-lightbox-caption') : null;
         const lightboxNote = lightbox ? lightbox.querySelector('.photo-wall-lightbox-note') : null;
         const lightboxNoteTitle = lightbox ? lightbox.querySelector('.photo-wall-lightbox-note-title') : null;
+        const lightboxNoteDate = lightbox ? lightbox.querySelector('.photo-wall-lightbox-note-date') : null;
         const lightboxNoteText = lightbox ? lightbox.querySelector('.photo-wall-lightbox-note-text') : null;
         const lightboxClose = lightbox ? lightbox.querySelector('.photo-wall-lightbox-close') : null;
 
@@ -651,18 +719,27 @@ const wallItems = rawItems.map((item, index) => ({
 
             const noteData = card.querySelector('.polaroid-note-data');
             const noteText = noteData ? noteData.textContent.trim() : '';
+            const dateData = card.querySelector('.polaroid-date-data');
+            const dateText = dateData ? dateData.textContent.trim() : '';
+            const hasDetails = !!(noteText || dateText);
             if (lightboxContent) {
-                lightboxContent.classList.toggle('has-note', !!noteText);
+                lightboxContent.classList.toggle('has-note', hasDetails);
             }
-            if (lightboxNote && lightboxNoteTitle && lightboxNoteText) {
-                if (noteText) {
+            if (lightboxNote && lightboxNoteTitle && lightboxNoteDate && lightboxNoteText) {
+                if (hasDetails) {
                     lightboxNoteTitle.textContent = image.alt || '';
+                    lightboxNoteDate.textContent = dateText;
+                    lightboxNoteDate.hidden = !dateText;
                     lightboxNoteText.textContent = noteText;
+                    lightboxNoteText.hidden = !noteText;
                     lightboxNote.hidden = false;
                     lightboxNote.setAttribute('aria-hidden', 'false');
                 } else {
                     lightboxNoteTitle.textContent = '';
+                    lightboxNoteDate.textContent = '';
+                    lightboxNoteDate.hidden = true;
                     lightboxNoteText.textContent = '';
+                    lightboxNoteText.hidden = false;
                     lightboxNote.hidden = true;
                     lightboxNote.setAttribute('aria-hidden', 'true');
                 }
@@ -693,9 +770,12 @@ const wallItems = rawItems.map((item, index) => ({
                 lightboxContent.classList.remove('has-note');
             }
 
-            if (lightboxNote && lightboxNoteTitle && lightboxNoteText) {
+            if (lightboxNote && lightboxNoteTitle && lightboxNoteDate && lightboxNoteText) {
                 lightboxNoteTitle.textContent = '';
+                lightboxNoteDate.textContent = '';
+                lightboxNoteDate.hidden = true;
                 lightboxNoteText.textContent = '';
+                lightboxNoteText.hidden = false;
                 lightboxNote.hidden = true;
                 lightboxNote.setAttribute('aria-hidden', 'true');
             }

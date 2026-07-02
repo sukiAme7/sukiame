@@ -85,6 +85,7 @@ photo_wall:
     second: https://bu.dusays.com/2025/09/20/68ce7ec5b9da8.jpg
   items:
     - title: Snow Trail
+      date: '2025-01-12'
       image: https://picsum.photos/seed/suki-wall-01/900/620
       x: 8
       y: 15
@@ -92,6 +93,7 @@ photo_wall:
       rotate: -13
       aspect: '16 / 10'
     - title: Blue Notes
+      date: '2025-02-08'
       image: https://picsum.photos/seed/suki-wall-02/760/820
       x: 31
       y: 17
@@ -99,6 +101,7 @@ photo_wall:
       rotate: -2
       aspect: '1 / 1.08'
     - title: Forest Story
+      date: '2025-03-19'
       image: https://picsum.photos/seed/suki-wall-03/900/580
       x: 53
       y: 12
@@ -106,6 +109,7 @@ photo_wall:
       rotate: -17
       aspect: '16 / 10'
     - title: Sky Spark
+      date: '2025-04-02'
       image: https://picsum.photos/seed/suki-wall-04/900/580
       x: 74
       y: 16
@@ -113,6 +117,7 @@ photo_wall:
       rotate: 11
       aspect: '16 / 10'
     - title: Quiet Snow
+      date: '2025-05-17'
       image: https://picsum.photos/seed/suki-wall-05/780/780
       x: 16
       y: 43
@@ -120,6 +125,7 @@ photo_wall:
       rotate: 14
       aspect: '1 / 1'
     - title: Green Light
+      date: '2025-06-06'
       image: https://picsum.photos/seed/suki-wall-06/900/560
       x: 38
       y: 40
@@ -127,6 +133,7 @@ photo_wall:
       rotate: -1
       aspect: '16 / 10'
     - title: Crystal Blue
+      date: '2025-07-21'
       image: https://picsum.photos/seed/suki-wall-07/900/620
       x: 55
       y: 38
@@ -134,6 +141,7 @@ photo_wall:
       rotate: -18
       aspect: '16 / 10'
     - title: Window Page
+      date: '2025-08-13'
       image: https://picsum.photos/seed/suki-wall-08/760/860
       x: 80
       y: 36
@@ -141,6 +149,7 @@ photo_wall:
       rotate: 15
       aspect: '1 / 1.08'
     - title: Umbrella Rain
+      date: '2025-09-24'
       image: https://picsum.photos/seed/suki-wall-09/900/620
       x: 30
       y: 67
@@ -148,6 +157,7 @@ photo_wall:
       rotate: 12
       aspect: '16 / 10'
     - title: Paper Note
+      date: '2025-10-11'
       image: https://picsum.photos/seed/suki-wall-11/760/860
       x: 72
       y: 69
