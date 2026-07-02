@@ -99,6 +99,45 @@
             cursor: url("<%- url_for('/cursors/cur118.cur') %>"), auto !important;
         }
 
+        .sakura-click-petal {
+            position: fixed;
+            pointer-events: none;
+            width: 18px;
+            height: 12px;
+            background: linear-gradient(135deg, #ffd7e6 0%, #ffc2d7 45%, #ff9fbe 100%);
+            border-radius: 70% 0 70% 0;
+            box-shadow: 0 0 8px rgba(255, 192, 203, 0.35);
+            transform-origin: center;
+            z-index: 10000;
+            will-change: transform, opacity;
+            animation: sakuraClickFly 1400ms cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
+        }
+
+        .sakura-click-petal::after {
+            content: "";
+            position: absolute;
+            width: 55%;
+            height: 20%;
+            top: 18%;
+            left: 18%;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 999px;
+            filter: blur(1px);
+            transform: rotate(-20deg);
+        }
+
+        @keyframes sakuraClickFly {
+            0% {
+                opacity: var(--petal-opacity, 1);
+                transform: translate3d(0, 0, 0) rotate(var(--petal-start-rotate, 0deg)) scale(var(--petal-start-scale, 1));
+            }
+
+            100% {
+                opacity: 0;
+                transform: translate3d(var(--petal-x), var(--petal-y), 0) rotate(var(--petal-rotate)) scale(var(--petal-end-scale, 0.35));
+            }
+        }
+
         .page-transition-target {
             will-change: transform, opacity;
             transform-origin: center center;
@@ -1436,6 +1475,52 @@
     <% } %>
 
     <script>
+        (() => {
+            const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+            const PETAL_COUNT = 14;
+            const PETAL_LIFE_MS = 1400;
+            const MAX_PETALS = 160;
+            const activePetals = [];
+
+            const prunePetals = () => {
+                while (activePetals.length > MAX_PETALS) {
+                    const petal = activePetals.shift();
+                    if (petal) petal.remove();
+                }
+            };
+
+            document.addEventListener('click', (event) => {
+                if (prefersReducedMotion.matches) return;
+
+                for (let i = 0; i < PETAL_COUNT; i += 1) {
+                    const petal = document.createElement('div');
+                    const startScale = Math.random() * 0.8 + 0.7;
+
+                    petal.className = 'sakura-click-petal';
+                    petal.style.left = `${event.clientX}px`;
+                    petal.style.top = `${event.clientY}px`;
+                    petal.style.setProperty('--petal-x', `${(Math.random() - 0.5) * 260}px`);
+                    petal.style.setProperty('--petal-y', `${(Math.random() - 0.5) * 220 - 40}px`);
+                    petal.style.setProperty('--petal-rotate', `${Math.random() * 720 - 360}deg`);
+                    petal.style.setProperty('--petal-start-rotate', `${Math.random() * 360}deg`);
+                    petal.style.setProperty('--petal-start-scale', startScale.toFixed(2));
+                    petal.style.setProperty('--petal-end-scale', (startScale * 0.35).toFixed(2));
+                    petal.style.setProperty('--petal-opacity', (Math.random() * 0.4 + 0.6).toFixed(2));
+
+                    document.body.appendChild(petal);
+                    activePetals.push(petal);
+
+                    window.setTimeout(() => {
+                        petal.remove();
+                        const index = activePetals.indexOf(petal);
+                        if (index !== -1) activePetals.splice(index, 1);
+                    }, PETAL_LIFE_MS);
+                }
+
+                prunePetals();
+            });
+        })();
+
         function updateClock() {
             const now = new Date();
             const hours = String(now.getHours()).padStart(2, '0');
