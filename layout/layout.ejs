@@ -6,18 +6,27 @@
     <title><%- page.title || config.title %></title>
     <link rel="icon" href="<%- /^(?:[a-z][a-z0-9+.-]*:)?\/\//i.test(theme.favicon || theme.avatar || '') ? (theme.favicon || theme.avatar) : url_for(theme.favicon || theme.avatar || '/images/avatar-cat.svg') %>">
     <link rel="preload" as="image" type="image/x-icon" href="<%- url_for('/cursors/cur118.cur') %>">
-    <link rel="preload" as="image" type="image/png" href="<%- url_for('/cursors/cur118-fake-40.png') %>">
+    <style>
+        html.is-page-enter-prep,
+        html.is-page-enter-prep body,
+        html.is-page-enter-prep body *,
+        html.is-page-cursor-refresh,
+        html.is-page-cursor-refresh body,
+        html.is-page-cursor-refresh body * {
+            cursor: url("<%- url_for('/cursors/cur118.cur') %>"), auto !important;
+        }
+
+        html.is-page-cursor-cover::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            z-index: 2147483647;
+            background: transparent;
+            cursor: url("<%- url_for('/cursors/cur118.cur') %>"), auto !important;
+        }
+    </style>
     <script>
         (() => {
-            const installCursorGuard = () => {
-                if (document.getElementById('sukiame-transition-cursor-guard')) return;
-
-                const style = document.createElement('style');
-                style.id = 'sukiame-transition-cursor-guard';
-                style.textContent = 'html,html *,body,body *{cursor:none!important;}';
-                document.head.appendChild(style);
-            };
-
             try {
                 const raw = window.sessionStorage.getItem('sukiame-page-transition');
                 if (!raw) return;
@@ -28,21 +37,7 @@
                     snapshot.href === window.location.href &&
                     Date.now() - snapshot.at < 4000
                 ) {
-                    const cursorX = Number(snapshot.cursorX);
-                    const cursorY = Number(snapshot.cursorY);
-                    const cursorClasses = ['is-page-enter-prep', 'is-page-cursor-refresh'];
-
-                    if (Number.isFinite(cursorX) && Number.isFinite(cursorY)) {
-                        installCursorGuard();
-                        document.documentElement.style.setProperty('--page-fake-cursor-x', `${cursorX}px`);
-                        document.documentElement.style.setProperty('--page-fake-cursor-y', `${cursorY}px`);
-                        document.documentElement.style.setProperty('cursor', 'none', 'important');
-                        cursorClasses.push('is-page-fake-cursor');
-                    } else {
-                        cursorClasses.push('is-page-cursor-cover');
-                    }
-
-                    document.documentElement.classList.add(...cursorClasses);
+                    document.documentElement.classList.add('is-page-enter-prep', 'is-page-cursor-refresh', 'is-page-cursor-cover');
                 }
             } catch (error) {}
         })();
@@ -152,27 +147,6 @@
             z-index: 2147483647;
             background: transparent;
             cursor: url("<%- url_for('/cursors/cur118.cur') %>"), auto !important;
-        }
-
-        html.is-page-fake-cursor,
-        html.is-page-fake-cursor body,
-        html.is-page-fake-cursor body *,
-        html.is-page-fake-cursor .page-cursor-refresh-cover,
-        html.is-page-fake-cursor::before {
-            cursor: none !important;
-        }
-
-        html.is-page-fake-cursor::after {
-            content: "";
-            position: fixed;
-            left: var(--page-fake-cursor-x, 0px);
-            top: var(--page-fake-cursor-y, 0px);
-            width: 40px;
-            height: 40px;
-            z-index: 2147483647;
-            pointer-events: none;
-            background: url("<%- url_for('/cursors/cur118-fake-40.png') %>") center / contain no-repeat;
-            transform: translate(-8px, -5px);
         }
 
         .sakura-click-petal {
@@ -1889,51 +1863,16 @@
             let cursorRefreshCover = null;
             let cursorRefreshCoverTimer = 0;
             let cursorRefreshReleaseTimer = 0;
-            let pendingTransitionHref = '';
-            let fakeCursorX = null;
-            let fakeCursorY = null;
 
-            const installCursorGuard = () => {
-                if (document.getElementById('sukiame-transition-cursor-guard')) return;
-
-                const style = document.createElement('style');
-                style.id = 'sukiame-transition-cursor-guard';
-                style.textContent = 'html,html *,body,body *{cursor:none!important;}';
-                document.head.appendChild(style);
-            };
-
-            const removeCursorGuard = () => {
-                document.getElementById('sukiame-transition-cursor-guard')?.remove();
-            };
-
-            const storeTransitionSnapshot = (href, cursorX, cursorY) => {
+            const storeTransitionSnapshot = (href) => {
                 if (!href) return;
 
                 try {
                     window.sessionStorage.setItem(TRANSITION_STORAGE_KEY, JSON.stringify({
                         href,
-                        at: Date.now(),
-                        cursorX,
-                        cursorY
+                        at: Date.now()
                     }));
                 } catch (error) {}
-            };
-
-            const activateFakeCursor = (cursorX, cursorY) => {
-                if (!Number.isFinite(cursorX) || !Number.isFinite(cursorY)) return false;
-
-                fakeCursorX = cursorX;
-                fakeCursorY = cursorY;
-                window.clearTimeout(cursorRefreshReleaseTimer);
-                cursorRefreshReleaseTimer = 0;
-                removeCursorRefreshCover();
-                installCursorGuard();
-                root.style.setProperty('--page-fake-cursor-x', `${cursorX}px`);
-                root.style.setProperty('--page-fake-cursor-y', `${cursorY}px`);
-                root.style.setProperty('cursor', 'none', 'important');
-                root.classList.add('is-page-cursor-refresh', 'is-page-fake-cursor');
-
-                return true;
             };
 
             const removeCursorRefreshCover = () => {
@@ -1964,48 +1903,24 @@
                 window.clearTimeout(cursorRefreshReleaseTimer);
                 cursorRefreshReleaseTimer = 0;
                 root.classList.remove('is-page-cursor-refresh');
-                root.classList.remove('is-page-fake-cursor');
                 root.style.removeProperty('cursor');
-                root.style.removeProperty('--page-fake-cursor-x');
-                root.style.removeProperty('--page-fake-cursor-y');
-                pendingTransitionHref = '';
-                fakeCursorX = null;
-                fakeCursorY = null;
-                removeCursorGuard();
                 removeCursorRefreshCover();
                 window.removeEventListener('pointermove', handleCursorRefreshMove);
                 window.removeEventListener('mousemove', handleCursorRefreshMove);
             };
 
-            const handleCursorRefreshMove = (event) => {
-                if (root.classList.contains('is-page-fake-cursor')) {
-                    fakeCursorX = event.clientX;
-                    fakeCursorY = event.clientY;
-                    root.style.setProperty('--page-fake-cursor-x', `${fakeCursorX}px`);
-                    root.style.setProperty('--page-fake-cursor-y', `${fakeCursorY}px`);
-                    root.style.setProperty('cursor', 'none', 'important');
-                    installCursorGuard();
-
-                    if (pendingTransitionHref) {
-                        storeTransitionSnapshot(pendingTransitionHref, fakeCursorX, fakeCursorY);
-                    }
-                }
-
+            const handleCursorRefreshMove = () => {
                 if (navigating) {
                     return;
                 }
 
                 window.clearTimeout(cursorRefreshReleaseTimer);
-                cursorRefreshReleaseTimer = window.setTimeout(releaseCursorRefresh, root.classList.contains('is-page-fake-cursor') ? 180 : 0);
+                cursorRefreshReleaseTimer = window.setTimeout(releaseCursorRefresh, 0);
             };
 
             const holdCursorUntilMove = () => {
                 root.classList.add('is-page-cursor-refresh');
-                if (root.classList.contains('is-page-fake-cursor')) {
-                    root.style.setProperty('cursor', 'none', 'important');
-                } else {
-                    refreshCursorHitTest();
-                }
+                refreshCursorHitTest();
                 window.addEventListener('pointermove', handleCursorRefreshMove, { passive: true });
                 window.addEventListener('mousemove', handleCursorRefreshMove, { passive: true });
             };
@@ -2141,27 +2056,17 @@
 
                 navigating = true;
                 event.preventDefault();
-                pendingTransitionHref = nextUrl.href;
-                activateFakeCursor(event.clientX, event.clientY);
-                holdCursorUntilMove();
                 root.classList.add('is-page-navigating');
+                holdCursorUntilMove();
                 applyExitVectors();
                 prefetchPage(nextUrl);
-                storeTransitionSnapshot(
-                    nextUrl.href,
-                    Number.isFinite(fakeCursorX) ? fakeCursorX : event.clientX,
-                    Number.isFinite(fakeCursorY) ? fakeCursorY : event.clientY
-                );
+                storeTransitionSnapshot(nextUrl.href);
                 afterNextPaint(() => {
                     document.body.classList.add('is-page-leaving');
                 });
 
                 window.setTimeout(() => {
-                    storeTransitionSnapshot(
-                        nextUrl.href,
-                        Number.isFinite(fakeCursorX) ? fakeCursorX : event.clientX,
-                        Number.isFinite(fakeCursorY) ? fakeCursorY : event.clientY
-                    );
+                    storeTransitionSnapshot(nextUrl.href);
                     window.location.href = nextUrl.href;
                 }, NAVIGATION_DELAY_MS);
             });
@@ -2185,7 +2090,6 @@
             window.addEventListener('pageshow', (event) => {
                 document.body.classList.remove('is-page-leaving');
                 root.classList.remove('is-page-navigating');
-                pendingTransitionHref = '';
                 navigating = false;
                 if (event.persisted) {
                     releaseCursorRefresh();
