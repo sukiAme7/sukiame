@@ -93,6 +93,12 @@
             pointer-events: none;
         }
 
+        html.is-page-navigating,
+        html.is-page-navigating body,
+        html.is-page-navigating body * {
+            cursor: url("<%- url_for('/cursors/cur118.cur') %>"), auto !important;
+        }
+
         .page-transition-target {
             will-change: transform, opacity;
             transform-origin: center center;
@@ -1636,6 +1642,7 @@
         (() => {
             const root = document.documentElement;
             document.body.classList.remove('is-page-leaving');
+            root.classList.remove('is-page-navigating');
             root.classList.remove('is-page-entering');
 
             const shell = document.querySelector('.home-shell, .blog-shell, .post-shell, .note-shell, .friends-shell, .photo-wall-shell, .guestbook-shell');
@@ -1841,6 +1848,7 @@
 
                 navigating = true;
                 event.preventDefault();
+                root.classList.add('is-page-navigating');
                 applyExitVectors();
                 prefetchPage(nextUrl);
                 try {
@@ -1876,6 +1884,7 @@
 
             window.addEventListener('pageshow', () => {
                 document.body.classList.remove('is-page-leaving');
+                root.classList.remove('is-page-navigating');
                 navigating = false;
             });
 
