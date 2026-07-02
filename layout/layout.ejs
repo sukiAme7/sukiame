@@ -317,6 +317,13 @@
             font: inherit;
         }
 
+        a.site-cursor-link,
+        a.site-cursor-link *,
+        a.site-cursor-link:hover,
+        a.site-cursor-link:hover * {
+            cursor: url("<%- url_for('/cursors/cur118.cur') %>"), auto !important;
+        }
+
         .home-shell {
             min-height: 100vh;
             display: flex;
@@ -1851,6 +1858,27 @@
                 if (/^\/\d{4}\//.test(pathname)) return true;
                 return false;
             };
+
+            const isSitePageLink = (link) => {
+                if (!link || link.target === '_blank' || link.hasAttribute('download')) return false;
+
+                const href = link.getAttribute('href') || '';
+                if (!href || href.startsWith('#') || href.startsWith('mailto:') || href.startsWith('tel:') || href.endsWith('/atom.xml')) return false;
+
+                const nextUrl = new URL(link.href, window.location.href);
+                if (nextUrl.origin !== window.location.origin) return false;
+                if (nextUrl.href === window.location.href) return false;
+
+                return true;
+            };
+
+            const syncSiteCursorLinks = () => {
+                document.querySelectorAll('a[href]').forEach((link) => {
+                    link.classList.toggle('site-cursor-link', isSitePageLink(link));
+                });
+            };
+
+            syncSiteCursorLinks();
 
             const prefetched = new Set();
             const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
