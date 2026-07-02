@@ -67,6 +67,7 @@
             background-size: 400% 400%;
             animation: gradientBG 15s ease infinite;
             color: var(--text-main);
+            cursor: url("<%- url_for('/cursors/cur118.cur') %>"), auto;
             font-family: 'Nunito', sans-serif;
         }
 
@@ -200,7 +201,18 @@
 
         a {
             color: inherit;
+            cursor: pointer;
             text-decoration: none;
+        }
+
+        [role="button"],
+        summary,
+        label,
+        select,
+        input[type="button"],
+        input[type="submit"],
+        input[type="reset"] {
+            cursor: pointer;
         }
 
         button {
